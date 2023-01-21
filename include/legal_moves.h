@@ -10,8 +10,8 @@ typedef enum {
   BISHOP = 2,
   ROOK = 3,
   QUEEN = 4,
-  KING = 5
-} PIECE_TYPE;
+  KING = 
+} TYPE;
 
 typedef enum {
   WHITE = 0,
@@ -29,6 +29,8 @@ typedef struct board_args {
   uint64_t piece_boards[2][6][3];
   uint64_t hv_sliders[2][3];
   uint64_t d_sliders[2][3];
+  unsigned int k_pos[2][2];
 } BOARD_ARGS;
 
-uint64_t calc_spacially_aware(TYPE type, unsigned int *pos, uint64_t *sa);
+uint64_t calc_sa(TYPE type, SIDE enemy_t, unsigned int *pos,
+                              uint64_t *sa);
