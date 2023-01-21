@@ -8,11 +8,12 @@
 #include <ctype.h>
 #endif
 int main() {
-
+  FILE *fp = fopen("DEGUB.txt", "w");
+  fprintf(fp, "**************DEGUB OUTPUT***************\n");
   return 0;
 }
 
-void print_boards(board_args *boards) {
+void print_boards(board_args *boards, FILE *fp) {
   char output[3][8][8] =
   {{{'0','0','0','0','0','0','0','0'},
   {'0','0','0','0','0','0','0','0'},
@@ -91,5 +92,25 @@ x  4  | 0 0 0 0 0 0 0 0
       }
     }
   }
-
+  for (int i = 0; i < 3; i++) {
+    if (i == 0) {
+      printf("Level One\n");
+      fprintf(fp, "Level One\n");
+    } else if (i == 1) {
+      printf("Level Two\n");
+      fprintf(fp, "Level Two\n");
+    } else {
+      printf("Level Three\n");
+      fprintf(fp, "Level Three\n");
+    }
+    for (int j = 0; j < 8; j++) {
+      for (int k = 0; k < 8; k++) {
+        printf("%c", output[i][j][k]);
+        fprintf(fp, "%c", output[i][j][k]);
+      }
+      printf("\n");
+      fprintf(fp, "\n");
+    }
+  }
+  fflush();
 }
