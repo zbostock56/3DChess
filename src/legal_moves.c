@@ -3,34 +3,41 @@
 void get_legal(SIDE player, unsigned int *pos, TYPE type,
                BOARD_ARGS args, uint64_t *output) {
   //CHECK DETECTION
-  uint64_t check = 0;
-  unsigned int k_pos = args.k_pos[type][0];
-  PIECE_TYPE enemy_t = type == WHITE ? BLACK : WHITE;
-  uint64_t bishop_king= BISHOP_PL[k_pos][0];
-  uint64_t rook_king = ROOK_PL[k_pos][0];
+  unsigned int k_pos = args.k_pos[player][0];
+  SIDE enemy_t = player == WHITE ? BLACK : WHITE;
+  uint64_t bishop_king= (BISHOP_PL + (5 * k_pos))[0];
+  uint64_t rook_king = (ROOK_PL + (5 * k_pos))[0];
+  printf_bitboard(bishop_king);
+  printf_bitboard(rook_king);
   uint64_t bk_sa[3];
   uint64_t rk_sa[3];
 
-  calc_sa(BISHOP, enemy_t, args.k_pos, bk_sa);
-  calc_sa(ROOK, enemy_t, args.k_pos, bk_sa);
+  calc_sa(BISHOP, enemy_t, args.boards, args.k_pos[player], bk_sa);
+  calc_sa(ROOK, enemy_t, args.boards, args.k_pos[player], bk_sa);
 
   unsigned int double_check = 0;
   unsigned int in_check = 0;
   uint64_t d_check[3] = { 0, 0, 0 };
-  slider_check_detect(bk_sa, bishop_king, BISHOP_PL, args.k_pos[type],
+  slider_check_detect(bk_sa, bishop_king, BISHOP_PL, args.k_pos[player],
                       args.d_sliders[enemy_t], d_check, &double_check);
 
   uint64_t hv_check[3] = { 0, 0, 0 };
-  slider_check_detect(rk_sa, rook_king, ROOK_PL, args.k_pos[type],
+  slider_check_detect(rk_sa, rook_king, ROOK_PL, args.k_pos[player],
                       args.hv_sliders[enemy_t], hv_check, &double_check);
 
   uint64_t j_check[3] = { 0, 0, 0 };
-  uint64_t *p_attack = type == WHITE ? B_PAWN_ATTACK : W_PAWN_ATTACK;
-  jump_check_detect(args.k_pos[type],
-                    KNIGHT_PL | p_attack,
-                    args.piece_boards[enemy_t][KNIGHT] |
-                    args.piece_boards[enemy_t][PAWN], j_check,
-                    &double_check);
+  uint64_t p_attack = player == WHITE ? B_PAWN_ATTACK[args.k_pos[player][0]] :
+                                       W_PAWN_ATTACK[args.k_pos[player][0]];
+  uint64_t kp_enemies[3];
+  kp_enemies[TOP] = args.piece_boards[enemy_t][KNIGHT][TOP] |
+                    args.piece_boards[enemy_t][PAWN][TOP];
+  kp_enemies[MIDDLE] = args.piece_boards[enemy_t][KNIGHT][MIDDLE] |
+                       args.piece_boards[enemy_t][PAWN][MIDDLE];
+  kp_enemies[BOTTOM] = args.piece_boards[enemy_t][KNIGHT][BOTTOM] |
+                       args.piece_boards[enemy_t][PAWN][BOTTOM];
+  jump_check_detect(args.k_pos[player],
+                    KNIGHT_PL[args.k_pos[player][0]] | p_attack, kp_enemies,
+                    j_check, &double_check);
 
   uint64_t total_check[3] = { 0, 0, 0 };
   total_check[TOP] = d_check[TOP] | hv_check[TOP] | j_check[TOP];
@@ -42,7 +49,7 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
   if (type == KING) {
     // KING
     uint64_t under_attack[3] = { 0, 0, 0 };
-    uint64_t sa[2][3] = 0;
+    uint64_t sa[2][3];
 
     uint64_t pl = KING_PL[pos[0]];
     
@@ -50,68 +57,69 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
     unsigned int coord[2];
     coord[1] = pos[1];
     while (pl) {
-      s_pos = log(pl);
-      pl ^= (1 << s_pos);
+      s_pos = log2_lookup(pl);
+      pl ^= (ONE << s_pos);
 
       coord[0] = s_pos;
-      calc_sa(BISHOP, enemy_t, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, coord, sa[ROOK]);
+      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
+      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
 
       if (sa[BISHOP][pos[1]] & args.d_sliders[enemy_t][pos[1]] ||
           sa[ROOK][pos[1]] & args.hv_sliders[enemy_t][pos[1]]) {
-        under_attack[coord[1]] |= (1 << coord[0]);
+        under_attack[coord[1]] |= (ONE << coord[0]);
       }
     }
     coord[0] = pos[0];
     if (pos[0] == TOP) {
       coord[1] = MIDDLE;
-      calc_sa(BISHOP, enemy_t, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, coord, sa[ROOK]);
+      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
+      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
       if (sa[BISHOP][pos[1]] & args.d_sliders[enemy_t][pos[1]] ||
           sa[ROOK][pos[1]] & args.hv_sliders[enemy_t][pos[1]]) {
-        under_attack[MIDDLE] |= (1 << pos[0]);
+        under_attack[MIDDLE] |= (ONE << pos[0]);
       }
     } else if (pos[0] == MIDDLE) {
       coord[1] = TOP;
-      calc_sa(BISHOP, enemy_t, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, coord, sa[ROOK]);
+      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
+      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
       if (sa[BISHOP][pos[1]] & args.d_sliders[enemy_t][pos[1]] ||
           sa[ROOK][pos[1]] & args.hv_sliders[enemy_t][pos[1]]) {
-        under_attack[TOP] |= (1 << pos[0]);
+        under_attack[TOP] |= (ONE << pos[0]);
       }
       coord[1] = BOTTOM;
-      calc_sa(BISHOP, enemy_t, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, coord, sa[ROOK]);
+      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
+      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
       if (sa[BISHOP][pos[1]] & args.d_sliders[enemy_t][pos[1]] ||
           sa[ROOK][pos[1]] & args.hv_sliders[enemy_t][pos[1]]) {
-        under_attack[BOTTOM] |= (1 << pos[0]);
+        under_attack[BOTTOM] |= (ONE << pos[0]);
       }
     } else {
       coord[1] = MIDDLE;
-      calc_sa(BISHOP, enemy_t, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, coord, sa[ROOK]);
+      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
+      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
       if (sa[BISHOP][pos[1]] & args.d_sliders[enemy_t][pos[1]] ||
           sa[ROOK][pos[1]] & args.hv_sliders[enemy_t][pos[1]]) {
-        under_attack[MIDDLE] |= (1 << pos[0]);
+        under_attack[MIDDLE] |= (ONE << pos[0]);
       }
     }
 
-    output[top] = under_attack[TOP] ^ KING_PL[TOP];
+    output[TOP] = under_attack[TOP] ^ KING_PL[TOP];
     output[MIDDLE] = under_attack[MIDDLE] ^ KING_PL[MIDDLE];
     output[BOTTOM] = under_attack[BOTTOM] ^ KING_PL[BOTTOM];
+
     return;
   } else if (double_check) {
     output[TOP] = 0;
     output[MIDDLE] = 0;
-    output[BOTTOM] 0;
+    output[BOTTOM] = 0;
     return;
   } else if (type == PAWN || type == KNIGHT) {
     // SIMPLE
-    uint64_t *pl;
+    uint64_t pl;
     if (type == PAWN) {
-      pl = player == WHITE ? W_PAWN_PL : B_PAWN_PL;
+      pl = player == WHITE ? W_PAWN_PL[pos[0]] : B_PAWN_PL[pos[0]];
     } else {
-      pl = KNIGHT_PL;
+      pl = KNIGHT_PL[pos[0]];
     }
     output[pos[1]] = pl & args.boards[player][pos[1]];
     if (pos[1] == TOP) {
@@ -133,19 +141,21 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
 
     // CALCULATE SPACIALLY AWARE BOARDS
     if (type == ROOK || type == QUEEN) {
-      calc_sa(ROOK, enemy_t, pos, sa[ROOK]);
+      calc_sa(ROOK, enemy_t, args.boards, pos, sa[ROOK]);
     }
     if (type == BISHOP || type == QUEEN) {
-      calc_sa(BISHOP, enemy_t, pos, sa[BISHOP]);
+      calc_sa(BISHOP, enemy_t, args.boards, pos, sa[BISHOP]);
     }
     if (type == QUEEN) {
-      sa[QUEEN] = sa[ROOK] | sa[BISHOP];
+      sa[QUEEN][TOP] = sa[ROOK][TOP] | sa[BISHOP][TOP];
+      sa[QUEEN][MIDDLE] = sa[ROOK][MIDDLE] | sa[BISHOP][MIDDLE];
+      sa[QUEEN][BOTTOM] = sa[ROOK][BOTTOM] | sa[BISHOP][BOTTOM];
     }
 
     // DISCOVERY CHECK RESTRICTIONS
-    if (k_pos[type][0] == pos[0]) {
+    if (k_pos == pos[0]) {
       uint64_t cur = LEVELS[pos[0]];
-      if (bishop_king & cur == 0 && rook_king & cur == 0) {
+      if (((bishop_king & cur) == 0) && ((rook_king & cur) == 0)) {
         // NOT IN DISC CHECK
         if (in_check) {
           output[TOP] = total_check[TOP] & sa[type][TOP]; 
@@ -160,30 +170,30 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
 
       uint64_t path = 0;
       uint64_t between = 0;
-      uint64_t past = 0;
       uint64_t k_to_cur = 0;
       uint64_t cur_to_k = 0;
       uint64_t enemies = 0;
-      if ((1 << k_pos) > cur) {
+      if ((ONE << k_pos) > cur) {
         k_to_cur = UPPER_ZERO >> (63 - k_pos);
-        cur_to_k = LOWER_ZERO << log(cur);
+        cur_to_k = LOWER_ZERO << log2_lookup(cur);
       } else {
         k_to_cur = LOWER_ZERO << k_pos;
-        cur_to_k = UPPER_ZERO >> (63 - log(cur));
+        cur_to_k = UPPER_ZERO >> (63 - log2_lookup(cur));
       }
 
-      if (bishop_king & cur != 0) {
+      if ((bishop_king & cur) != 0) {
         // PIECE IS ALONG DIAGONAL FROM KING
         path = bishop_king & BISHOP_PL[pos[0]];
-        enemies = d_sliders[enemy_t][pos[0]];
+        enemies = args.d_sliders[enemy_t][pos[0]];
       } else {
         // PIECE IS ALONG RANK/FILE FROM KING
         path = rook_king & ROOK_PL[pos[0]];
-        enemies = hv_sliders[enemy_t][pos[0]];
+        enemies = args.hv_sliders[enemy_t][pos[0]];
       }
       between = path & k_to_cur & cur_to_k;
 
-      if (between & (boards[WHITE][pos[0]] | boards[BLACK][pos[0]])) {
+      if (between & (args.boards[WHITE][pos[0]] |
+                     args.boards[BLACK][pos[0]])) {
         // NOT IN DISC CHECK
         if (in_check) {
           output[TOP] = total_check[TOP] & sa[type][TOP]; 
@@ -200,17 +210,17 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
       uint64_t behind_enemies = from_k & ~enemies;
       unsigned int closest_enemy = 0;
       if (behind_enemies) {
-        if ((1 << k_pos) > cur) {
+        if ((ONE << k_pos) > cur) {
           // CUR IN FRONT OF ENEMY
-          closest_enemy = log(behind_enemies);
+          closest_enemy = log2_lookup(behind_enemies);
           from_k &= LOWER_ZERO << closest_enemy;
         } else {
           // CUR BEHIND ENEMY
-          closest_enemy = log(behind_enemies & -behind_enemies);
+          closest_enemy = log2_lookup(behind_enemies & -behind_enemies);
           from_k &= UPPER_ZERO >> (63 - closest_enemy);
         }
 
-        if (from_k & ~(boards[type][pos[0]] ^ ~LEVELS[pos[0]]) == 0) {
+        if ((from_k & ~(args.boards[player][pos[0]] ^ ~LEVELS[pos[0]])) == 0) {
           // DIST CHECK FOUND
           if (in_check) {
             output[TOP] = total_check[TOP] & sa[type][TOP] &
@@ -263,55 +273,56 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
   }
 }
 
-void calc_spacially_aware(TYPE type, SIDE enemy_t, unsigned int *pos,
-                          uint64_t *sa) {
-  uint64_t *pl = NULL;
+void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
+                          unsigned int *pos, uint64_t *sa) {
+  uint64_t *pl;
   if (type == BISHOP) {
-    boards = BISHOP_PL[pos[0]];
+    pl = BISHOP_PL + pos[0];
   } else if (type == ROOK) {
-    boards = ROOL_PL[pos[0]];
+    pl = ROOK_PL + pos[0];
   }
 
   // GRAB PSEUDO LEGAL MOVES FOR CURRENT LEVEL
   sa[pos[1]] = pl[0];
 
   // CANNOT MOVE DOWN OR UP WHERE FRIENDS ARE
+  SIDE player = enemy_t == WHITE ? BLACK : WHITE;
   if (pos[1] == TOP) {
-    sa[MIDDLE] = LEVELS[pos[0]] & args.boards[type][MIDDLE];
+    sa[MIDDLE] = LEVELS[pos[0]] & boards[player][MIDDLE];
     sa[BOTTOM] = 0;
   } else if (pos[1] == MIDDLE) {
-    sa[TOP] = LEVELS[pos[0]] & args.boards[type][TOP];
-    sa[BOTTOM] = LEVELS[pos[0]] & args.boards[type][BOTTOM];
+    sa[TOP] = LEVELS[pos[0]] & boards[player][TOP];
+    sa[BOTTOM] = LEVELS[pos[0]] & boards[player][BOTTOM];
   } else {
     sa[TOP] = 0;
-    sa[MIDDLE] = LEVELS[pos[0]] & args.boards[type][MIDDLE];
+    sa[MIDDLE] = LEVELS[pos[0]] & boards[player][MIDDLE];
   }
 
   // ELIMINATE POSITIONS OF FRIENDS AND ENEMIES
-  sa[pos[1]] &= (args.boards[enemy_t][pos[1]] & args.boards[type][pos[1]]);
+  sa[pos[1]] &= (boards[enemy_t][pos[1]] & boards[player][pos[1]]);
 
   // "SHADOW" FRIENDS AND ENEMIES
   uint64_t up = sa[pos[1]] & pl[1]; 
-  up &= UPPER_ZERO >> (63 - log(up & -up));
+  up &= UPPER_ZERO >> (63 - log2_lookup(up & -up));
 
   uint64_t right = sa[pos[1]] & pl[2]; 
-  right &= UPPER_ZERO >> (63 - log(right & -right));
+  right &= UPPER_ZERO >> (63 - log2_lookup(right & -right));
 
   uint64_t down = sa[pos[1]] & pl[3]; 
-  down &= UPPER_ZERO >> (63 - log(down & -down));
+  down &= UPPER_ZERO >> (63 - log2_lookup(down & -down));
 
   uint64_t left = sa[pos[1]] & pl[4]; 
-  left &= LOWER_ZERO << log(left);
+  left &= LOWER_ZERO << log2_lookup(left);
 
   // COMBINE SHADOWS
   sa[pos[1]] = up | right | down | left;  
   // RENABLE ATTACKING
-  sa[pos[1]] |= (pl[0] & args.boards[enemy_t][pos1]);
+  sa[pos[1]] |= (pl[0] & boards[enemy_t][pos[1]]);
 }
 
 void slider_check_detect(uint64_t *sk, uint64_t sk_xray, uint64_t *pl,
                          unsigned int *pos, uint64_t *sliders,
-                         uint64_t *output, int *double_check) {
+                         uint64_t *output, unsigned int *double_check) {
   unsigned int num_check = 0;
   output[pos[1]] = sk[pos[1]] & ~sliders[pos[1]];
   if (pos[1] == TOP) {
@@ -338,7 +349,7 @@ void slider_check_detect(uint64_t *sk, uint64_t sk_xray, uint64_t *pl,
     *double_check = 1;
   } else if (output[pos[1]]) {
     // Check is vector between slider and king
-    unsigned int e_pos = log(output[pos[1]]);
+    unsigned int e_pos = log2_lookup(output[pos[1]]);
 
     uint64_t between_mask = 0;
     if (pos[0] > e_pos) {
@@ -350,10 +361,10 @@ void slider_check_detect(uint64_t *sk, uint64_t sk_xray, uint64_t *pl,
   }
 }
 
-void jump_check_detect(uint64_t *pos, uint64_t *pl, uint64_t *piece_board,
+void jump_check_detect(unsigned int *pos, uint64_t pl, uint64_t *piece_board,
                        uint64_t *output, unsigned int *double_check) {
   unsigned int num_check = 0;
-  output[pos[1]] = pl[pos[0]] & piece_board[pos[1]];
+  output[pos[1]] = pl & piece_board[pos[1]];
   if (pos[1] == TOP) {
     output[MIDDLE] = LEVELS[pos[1]] & piece_board[MIDDLE];
     output[BOTTOM] = 0;
@@ -377,6 +388,5 @@ void jump_check_detect(uint64_t *pos, uint64_t *pl, uint64_t *piece_board,
 
   if (num_check > 1 || (output[pos[1]] & -output[pos[1]])) {
     *double_check = 1;
-    return 0;
   }
 }
