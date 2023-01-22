@@ -153,16 +153,16 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
     } else {
       pl = KNIGHT_PL[pos[0]];
     }
-    output[pos[1]] = pl & args.boards[player][pos[1]];
+    output[pos[1]] = pl & ~args.boards[player][pos[1]];
     if (pos[1] == TOP) {
-      output[MIDDLE] = LEVELS[pos[0]] & args.boards[player][MIDDLE];
+      output[MIDDLE] = LEVELS[pos[0]] & ~args.boards[player][MIDDLE];
       output[BOTTOM] = 0;
     } else if (pos[1] == MIDDLE) {
-      output[TOP] = LEVELS[pos[0]] & args.boards[player][TOP];
-      output[BOTTOM] = LEVELS[pos[0]] & args.boards[player][BOTTOM];
+      output[TOP] = LEVELS[pos[0]] & ~args.boards[player][TOP];
+      output[BOTTOM] = LEVELS[pos[0]] & ~args.boards[player][BOTTOM];
     } else {
       output[TOP] = 0;
-      output[MIDDLE] = LEVELS[pos[0]] & args.boards[player][MIDDLE];
+      output[MIDDLE] = LEVELS[pos[0]] & ~args.boards[player][MIDDLE];
     }
     return;
   } else {
