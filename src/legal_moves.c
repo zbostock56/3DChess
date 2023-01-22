@@ -31,8 +31,8 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
                       args.hv_sliders[enemy_t], hv_check, &double_check);
 
   uint64_t j_check[3] = { 0, 0, 0 };
-  uint64_t p_attack = player == WHITE ? B_PAWN_ATTACK[args.k_pos[player][0]] :
-                                       W_PAWN_ATTACK[args.k_pos[player][0]];
+  uint64_t p_attack = player == WHITE ? W_PAWN_ATTACK[args.k_pos[player][0]] :
+                                       B_PAWN_ATTACK[args.k_pos[player][0]];
   uint64_t kp_enemies[3];
   kp_enemies[TOP] = args.piece_boards[enemy_t][KNIGHT][TOP] |
                     args.piece_boards[enemy_t][PAWN][TOP];
