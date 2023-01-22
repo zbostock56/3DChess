@@ -190,7 +190,6 @@ int main() {
 
 
       game = make_move(&game, WHITE, type, from, to);
-      
       turn = 0;
     } else {
       printf_bitboard(game.boards[WHITE][0]);
@@ -199,7 +198,7 @@ int main() {
       printf_bitboard(game.boards[BLACK][0]);
       printf_bitboard(game.boards[BLACK][1]);
       printf_bitboard(game.boards[BLACK][2]);
-      MOVE com_move = search(&game, BLACK, 5);
+      MOVE com_move = search(&game, BLACK, 3);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
       uint64_t cur = (ONE << from[0]);
@@ -214,7 +213,7 @@ int main() {
         type = PAWN;
       } else if (game.piece_boards[BLACK][KNIGHT][from[1]] & cur) {
         type = KNIGHT;
-      } else { 
+      } else {
         type = KING;
       }
       game = make_move(&game, BLACK, type, from, to);

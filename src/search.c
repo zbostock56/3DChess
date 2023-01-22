@@ -1,5 +1,7 @@
-#include <search.h>
+// TODO fix search, currently clobbers 'to' and 'from' in move when returning from computer move
 
+
+#include <search.h>
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
   uint32_t p_flags = 0;
   uint32_t e_flags = 0;
@@ -7,7 +9,6 @@ MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
   SIDE enemy = to_move == WHITE ? BLACK : WHITE;
   get_legal(to_move, args->k_pos[to_move], KING, *args, legal_moves, &p_flags);
   get_legal(enemy, args->k_pos[enemy], KING, *args, legal_moves, &e_flags);
-
   if (depth == 0 || (p_flags & MATE) || (e_flags & MATE)) {
     return evaluate(args, to_move, p_flags, e_flags);
   }
@@ -21,7 +22,6 @@ MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
     best.score = INT_MAX;
   }
   MOVE cur;
-
   uint64_t pieces[3];
   uint64_t temp = 0;
   uint64_t cur_move_board = 0;
@@ -31,18 +31,13 @@ MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
     pieces[TOP] = args->piece_boards[to_move][i][TOP];
     pieces[MIDDLE] = args->piece_boards[to_move][i][MIDDLE];
     pieces[BOTTOM] = args->piece_boards[to_move][i][BOTTOM];
-
     for (LEVEL j = TOP; j <= BOTTOM; j++) {
       cur_pos[1] = j;
       temp = pieces[j];
       while (temp) {
         cur_pos[0] = log2_lookup(temp);
         temp ^= (ONE << cur_pos[0]);
-
         get_legal(to_move, cur_pos, i, *args, legal_moves, &p_flags);
-
-
-
         for (LEVEL k = TOP; k <= BOTTOM; k++) {
           to_pos[1] = k;
           cur_move_board = legal_moves[k];
@@ -62,13 +57,9 @@ MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
             }
           }
         }
-      
-
-
       }
     }
   }
-
   return cur;
 }
 

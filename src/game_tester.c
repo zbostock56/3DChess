@@ -85,6 +85,8 @@ int main() {
   args.k_pos[BLACK][1] = MIDDLE;
   MOVE best_move = search(&args, WHITE, 4);
   printf("score: %d\n", best_move.score);
+  printf("******from:******\nbit position: %d\nlevel: %d\n*****************\n", best_move.from[0], best_move.from[1]);
+  printf("******to:*******\nbit position: %d\nlevel: %d\n****************\n", best_move.to[0], best_move.to[1]);
 
   return 0;
 }
