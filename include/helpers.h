@@ -1,12 +1,15 @@
 #define UPPER_ZERO (0x7FFFFFFFFFFFFFFF)
 #define LOWER_ZERO (0xFFFFFFFFFFFFFFFF)
 
-#define W_MATE (0x00000001)
-#define B_MATE (0x00000002)
-#define WD_CHECK (0x00000004)
-#define BD_CHECK (0x00000008)
-#define W_CHECK (0x00000010)
-#define B_CHECK (0x00000020)
+#define MATE (0x00000001)
+#define D_CHECK (0x00000002)
+#define CHECK (0x00000004)
+
+#define B_VAL (3)
+#define R_VAL (5)
+#define Q_VAL (9)
+#define P_VAL (1)
+#define K_VAL (3)
 
 static const uint64_t ONE = 1;
 
@@ -38,7 +41,17 @@ typedef struct board_args {
   unsigned int k_pos[2][2];
 } BOARD_ARGS;
 
+typedef struct move {
+  BOARD_ARGS *args;
+  SIDE to_move;
+  unsigned int from[2];
+  unsigned int to[2];
+  int score;
+} MOVE;
+
 unsigned int log2_lookup(uint64_t);
 void print_bitboard(uint64_t b, FILE *fp);
+void print_bitboards(uint64_t *b, FILE *fp);
 void printf_bitboard(uint64_t b);
+void printf_bitboards(uint64_t *b);
 unsigned int get_piece_num(uint64_t *board);

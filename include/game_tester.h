@@ -1,10 +1,6 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <math.h>
-#include <ctype.h>
-#include <helpers.h>
+#include <psuedo_legal_moves.h>
 
+MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth);
 void get_legal(SIDE player, unsigned int *pos, TYPE type,
                BOARD_ARGS args, uint64_t *output);
 unsigned int log2_lookup(uint64_t);

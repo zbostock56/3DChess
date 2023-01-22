@@ -6,7 +6,8 @@ int main() {
 
   BOARD_ARGS args;
   args.boards[WHITE][TOP] = 0;
-  args.boards[WHITE][MIDDLE] = 0x10001000;
+  //args.boards[WHITE][MIDDLE] = 0x10001000;
+  args.boards[WHITE][MIDDLE] = 0x100010001000;
   args.boards[WHITE][BOTTOM] = 0;
   
   args.boards[BLACK][TOP] = 0;
@@ -14,7 +15,8 @@ int main() {
   args.boards[BLACK][BOTTOM] = 0;
 
   args.piece_boards[WHITE][BISHOP][TOP] = 0;
-  args.piece_boards[WHITE][BISHOP][MIDDLE] =
+  //args.piece_boards[WHITE][BISHOP][MIDDLE] = 0;
+  args.piece_boards[WHITE][BISHOP][MIDDLE] =0x10000000;
   args.piece_boards[WHITE][BISHOP][BOTTOM] =0;  
 
   args.piece_boards[BLACK][BISHOP][TOP] =0;  
@@ -22,7 +24,8 @@ int main() {
   args.piece_boards[BLACK][BISHOP][BOTTOM] =0;  
 
   args.piece_boards[WHITE][ROOK][TOP] =0;  
-  args.piece_boards[WHITE][ROOK][MIDDLE] =0x10000000;
+  //args.piece_boards[WHITE][ROOK][MIDDLE] =0x10000000;
+  args.piece_boards[WHITE][ROOK][MIDDLE] =0;
   args.piece_boards[WHITE][ROOK][BOTTOM] =0;  
 
   args.piece_boards[BLACK][ROOK][TOP] =0;  
@@ -38,7 +41,7 @@ int main() {
   args.piece_boards[BLACK][QUEEN][BOTTOM] =0;  
 
   args.piece_boards[WHITE][PAWN][TOP] =0;  
-  args.piece_boards[WHITE][PAWN][MIDDLE] =0;
+  args.piece_boards[WHITE][PAWN][MIDDLE] =0x100000000000;
   args.piece_boards[WHITE][PAWN][BOTTOM] =0;  
 
   args.piece_boards[BLACK][PAWN][TOP] =0;  
@@ -63,7 +66,8 @@ int main() {
 
 
   args.hv_sliders[WHITE][TOP] =0;
-  args.hv_sliders[WHITE][MIDDLE] =0x10000000;
+  //args.hv_sliders[WHITE][MIDDLE] =0x10000000;
+  args.hv_sliders[WHITE][MIDDLE] =0;
   args.hv_sliders[WHITE][BOTTOM] =0;
 
   args.hv_sliders[BLACK][TOP] =0;
@@ -71,7 +75,8 @@ int main() {
   args.hv_sliders[BLACK][BOTTOM] =0;
 
   args.d_sliders[WHITE][TOP] =0;
-  args.d_sliders[WHITE][MIDDLE] =0;
+  //args.d_sliders[WHITE][MIDDLE] =0;
+  args.d_sliders[WHITE][MIDDLE] =0x10000000;
   args.d_sliders[WHITE][BOTTOM] =0;
 
   args.d_sliders[BLACK][TOP] =0;
@@ -83,54 +88,27 @@ int main() {
   args.k_pos[BLACK][0] = 49;
   args.k_pos[BLACK][1] = MIDDLE;
 
-  fprintf(fp, "White:\n");
-  print_bitboard(args.boards[WHITE][MIDDLE], fp);
-  fprintf(fp, "Black:\n");
-  print_bitboard(args.boards[BLACK][MIDDLE], fp);
-
-  fprintf(fp, "W BISHOP:\n");
-  print_bitboard(args.piece_boards[WHITE][BISHOP][MIDDLE], fp);
-  fprintf(fp, "B BISHOP:\n");
-  print_bitboard(args.piece_boards[BLACK][BISHOP][MIDDLE], fp);
-
-  fprintf(fp, "W ROOK:\n");
-  print_bitboard(args.piece_boards[WHITE][ROOK][MIDDLE], fp);
-  fprintf(fp, "B ROOK:\n");
-  print_bitboard(args.piece_boards[BLACK][ROOK][MIDDLE], fp);
-
-  fprintf(fp, "W QUEEN:\n");
-  print_bitboard(args.piece_boards[WHITE][QUEEN][MIDDLE], fp);
-  fprintf(fp, "B QUEEN:\n");
-  print_bitboard(args.piece_boards[BLACK][QUEEN][MIDDLE], fp);
-
-  fprintf(fp, "W PAWN:\n");
-  print_bitboard(args.piece_boards[WHITE][PAWN][MIDDLE], fp);
-  fprintf(fp, "B PAWN:\n");
-  print_bitboard(args.piece_boards[BLACK][PAWN][MIDDLE], fp);
-
-  fprintf(fp, "W KNIGHT:\n");
-  print_bitboard(args.piece_boards[WHITE][KNIGHT][MIDDLE], fp);
-  fprintf(fp, "B KNIGHT:\n");
-  print_bitboard(args.piece_boards[BLACK][KNIGHT][MIDDLE], fp);
+  //unsigned int pos[2] = { 28, MIDDLE };
+  //uint64_t output[3];
   
-  fprintf(fp, "W KING:\n");
-  print_bitboard(args.piece_boards[WHITE][KING][MIDDLE], fp);
-  fprintf(fp, "B KING:\n");
-  print_bitboard(args.piece_boards[BLACK][KING][MIDDLE], fp);
-
-  fprintf(fp, "W K POS: %d %d\n", args.k_pos[WHITE][0], args.k_pos[WHITE][1]);
-  fprintf(fp, "B K POS: %d %d\n", args.k_pos[BLACK][0], args.k_pos[BLACK][1]);
-
-  unsigned int pos[2] = { 28, MIDDLE };
-  uint64_t output[3];
-  get_legal(WHITE, pos, ROOK, args, output);
-
-  print_bitboard(output[0], fp);
-  print_bitboard(output[1], fp);
-  print_bitboard(output[2], fp);
+  MOVE best_move = search(&args, WHITE, 1);
+  printf("score: %d\n", best_move.score);
 
   return 0;
 }
+
+void printf_bitboards(uint64_t *b) {
+  for (int i = 0; i < 3; i++) {
+    printf_bitboard(b[i]);
+  }
+}
+
+void print_bitboards(uint64_t *b, FILE *fp) {
+  for (int i = 0; i < 3; i++) {
+    print_bitboard(b[i], fp);
+  }
+}
+
 
 void print_bitboard(uint64_t b, FILE *fp) {
   fprintf(fp, "%ld:\n", b);

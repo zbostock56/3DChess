@@ -1,8 +1,7 @@
-#include <stdio.h>
-#include <stdint.h>
 #include <psuedo_legal_moves.h>
-#include <helpers.h>
 
+void get_legal(SIDE player, unsigned int *pos, TYPE type,
+               BOARD_ARGS args, uint64_t *output, uint32_t *flags);
 void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
                  unsigned int *pos, uint64_t *sa);
 void slider_check_detect(uint64_t *sk, uint64_t sk_xray, uint64_t *pl,
