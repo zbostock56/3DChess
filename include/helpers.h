@@ -32,7 +32,10 @@ typedef enum {
   MIDDLE = 1,
   BOTTOM = 2
 } LEVEL;
-
+/*
+  k_pos: [] = position
+  k_pos: [][] = level
+*/
 typedef struct board_args {
   uint64_t boards[2][3];
   uint64_t piece_boards[2][6][3];
