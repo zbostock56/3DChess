@@ -18,7 +18,7 @@ void print_bitboards(uint64_t *b, FILE *fp) {
 
 
 void print_bitboard(uint64_t b, FILE *fp) {
-  fprintf(fp, "%ld:\n", b);
+  fprintf(fp, "%llu:\n", b);
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       fprintf(fp, "1 ");
@@ -33,7 +33,7 @@ void print_bitboard(uint64_t b, FILE *fp) {
 }
 
 void printf_bitboard(uint64_t b) {
-  printf("%ld:\n", b);
+  printf("%llu:\n", b);
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       printf("1 ");
@@ -135,12 +135,12 @@ int main() {
   unsigned int to[2];
   while (1) {
     if (turn == 1) {
-      printf_bitboard(game.boards[WHITE][0]);
-      printf_bitboard(game.boards[WHITE][1]);
-      printf_bitboard(game.boards[WHITE][2]);
       printf_bitboard(game.boards[BLACK][0]);
       printf_bitboard(game.boards[BLACK][1]);
       printf_bitboard(game.boards[BLACK][2]);
+      printf_bitboard(game.boards[WHITE][0]);
+      printf_bitboard(game.boards[WHITE][1]);
+      printf_bitboard(game.boards[WHITE][2]);
       TYPE type;
       printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n3: PAWN\n4: KNIGHT\nAny: KING\n");
       scanf("%d", &piece);

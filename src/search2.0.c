@@ -15,13 +15,13 @@
      up the tree to be used in choosing the best move
 */
 #define PIECE_TYPES 6
-#define LEVELS 3
+#define NUM_LEVELS 3
 #define ONE 1
 
 int ms_bit_lookup(uint64_t *input) {
   int ms_bit_poss = log2_lookup(*input);
   *input &= ~(ONE << ms_bit_poss);
-  return ms_bit_lookup;
+  return ms_bit_poss;
 }
 
 void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
@@ -68,37 +68,80 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
   */
   uint32_t player_flags = 0;
   uint32_t enemy_flags = 0;
+  MOVE best;
+  MOVE current;
+  if (to_move == WHITE) {
+    best.score = INT_MIN;
+  } else {
+    best.score = INT_MAX;
+  }
+  best.args = args;
+  best.to_move = to_move;
+  unsigned int current_position[2];
+  unsigned int to_position[2];
+  uint64_t junk[3];
+  get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
   for (int i = 0; i < PIECE_TYPES; i++) {
-    for (int j = 0; j < LEVELS; j++) {
+    /*
+      SELECT PIECE TYPE
+    */
+    for (int j = 0; j < NUM_LEVELS; j++) {
+      /*
+        SELECT LEVEL
+      */
+      current_position[1] = j;
       /*
         FIND MOST SIG BIT OF PIECES BOARD, THEN REMOVE FROM BITBOARD
       */
-      uint64_t t_piece_board = args.piece_boards[to_move][i][j];
-      int ms_bit[2] = {ms_bit_lookup(&t_piece_board), j};
+      uint64_t t_piece_board = args->piece_boards[to_move][i][j];
+      unsigned int ms_bit[2] = {ms_bit_lookup(&t_piece_board), j};
+      current_position[0] = ms_bit[0];
       uint64_t legals[3];
-      get_legal(enemy, args->k_pos[enemy], KING, args, legals, &enemy_flags);
-      if (depth == 0 || (player_flags & MATE == 1 || enemy_flags & MATE == 1)) {
+      get_legal(to_move, ms_bit, i, *args, legals, &player_flags);
+      if (depth == 0) {
         return evaluate(args, to_move, player_flags, enemy_flags);
-      }
-      get_legal(to_move, ms_bit, i, args, legals, &player_flags);
-      for (int k = 0; k < LEVELS; k++) {
-        /*
-          GET SIG BIT FOR LEGAL MOVES BIT BOARD, THEN MAKE ALL MOVES
-        */
-        uint64_t t_legal_board = legals[k];
-        int ms_bit_poss_legal[2] = {ms_bit_lookup(&t_legal_board), k};
-        BOARD_ARGS copy;
-        make_temp_copy(args, &copy);
-        MOVE new_move = make_move(args, player, i, ms_bit, ms_bit_poss_legal);
-        search(args, enemy, depth - 1);
-        make_temp_copy(copy, args);
+      } else if ((player_flags & MATE) == 1 || (enemy_flags & MATE) == 1) {
+        current = evaluate(args, to_move, player_flags, enemy_flags);
+        if ((to_move == WHITE && current.score > best.score) ||
+            (to_move == BLACK && current.score < best.score)) {
+          best.score = current.score;
+          best.from[0] = current_position[0];
+          best.from[1] = current_position[1];
+          best.to[0] = current.to[0];
+          best.to[1] = current.to[1];
+        }
+      } else {
+        for (int k = 0; k < NUM_LEVELS; k++) {
+          /*
+            SELECT LEGAL MOVE
+          */
+          to_position[1] = k;
+          /*
+            GET SIG BIT FOR LEGAL MOVES BIT BOARD, THEN MAKE ALL MOVES
+          */
+          uint64_t t_legal_board = legals[k];
+          unsigned int ms_bit_poss_legal[2] = {ms_bit_lookup(&t_legal_board), k};
+          to_position[0] = ms_bit_poss_legal[0];
+          BOARD_ARGS copy;
+          make_temp_copy(args, &copy);
+          make_move(&copy, to_move, i, ms_bit, ms_bit_poss_legal);
+          current = search(&copy, enemy, depth - 1);
+          if ((to_move == WHITE && current.score > best.score) ||
+            (to_move == BLACK && current.score < best.score)) {
+            best.score = current.score;
+            best.from[0] = current_position[0];
+            best.from[1] = current_position[1];
+            best.to[0] = current.to[0];
+            best.to[1] = current.to[1];
+          }
+        }
       }
     }
   }
-  
+  return best;
 }
 
-BOARD_ARGS make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
+void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to) {
   SIDE enemy_t = to_move == WHITE ? BLACK : WHITE;
   uint64_t old_pos = LEVELS[from[0]];
@@ -144,6 +187,4 @@ BOARD_ARGS make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
   if (new_pos & args->piece_boards[enemy_t][KNIGHT][to[1]]) {
     args->piece_boards[enemy_t][KNIGHT][to[1]] ^= new_pos;
   }
-
-  return *args;
 }

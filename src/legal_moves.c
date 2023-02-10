@@ -329,7 +329,7 @@ void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
   uint64_t *pl;
   if (type == BISHOP) {
     pl = BISHOP_PL + (5 * pos[0]);
-  } else if (type == ROOK) {
+  } else {
     pl = ROOK_PL + (5 * pos[0]);
   }
 
