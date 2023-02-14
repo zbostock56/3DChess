@@ -1,9 +1,8 @@
 #include <psuedo_legal_moves.h>
-
+#include <frontend.h>
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth);
-BOARD_ARGS make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
+void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to);
-int turn = 1;
 void printf_bitboards(uint64_t *b) {
   for (int i = 0; i < 3; i++) {
     printf_bitboard(b[i]);
@@ -18,7 +17,7 @@ void print_bitboards(uint64_t *b, FILE *fp) {
 
 
 void print_bitboard(uint64_t b, FILE *fp) {
-  fprintf(fp, "%llu:\n", b);
+  fprintf(fp, "%ld:\n", b);
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       fprintf(fp, "1 ");
@@ -33,7 +32,7 @@ void print_bitboard(uint64_t b, FILE *fp) {
 }
 
 void printf_bitboard(uint64_t b) {
-  printf("%llu:\n", b);
+  printf("%ld:\n", b);
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       printf("1 ");
@@ -47,102 +46,55 @@ void printf_bitboard(uint64_t b) {
   printf("\n");
 }
 
+void print_boards(BOARD_ARGS game) {
+   if (game.boards[BLACK][0]) {
+     printf("-------------BLACK TOP-----------------\n");
+     printf_bitboard(game.boards[BLACK][0]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[BLACK][1]) {
+     printf("-------------BLACK MIDDLE--------------\n");
+     printf_bitboard(game.boards[BLACK][1]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[BLACK][2]) {
+     printf("-------------BLACK BOTTOM--------------\n");
+     printf_bitboard(game.boards[BLACK][2]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][0]) {
+     printf("-------------WHITE TOP-----------------\n");
+     printf_bitboard(game.boards[WHITE][0]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][1]) {
+     printf("-------------WHITE MIDDLE--------------\n");
+     printf_bitboard(game.boards[WHITE][1]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][2]) {
+     printf("-------------WHITE BOTTOM--------------\n");
+     printf_bitboard(game.boards[WHITE][2]);
+     printf("---------------------------------------\n");
+   }
+}
 
 int main() {
+  /*
+    LOAD INITIAL BOARD
+  */
+
   BOARD_ARGS game;
-  game.boards[WHITE][0] = 0;
-  game.boards[WHITE][1] = 0xffff;
-  game.boards[WHITE][2] = 0;
-
-  game.boards[BLACK][0] = 0;
-  game.boards[BLACK][1] = 0xffff000000000000;
-  game.boards[BLACK][2] = 0;
-
-  game.piece_boards[WHITE][BISHOP][0] = 0;
-  game.piece_boards[WHITE][BISHOP][1] = 0x42;
-  game.piece_boards[WHITE][BISHOP][2] = 0;
-
-  game.piece_boards[BLACK][BISHOP][0] = 0;
-  game.piece_boards[BLACK][BISHOP][1] = 0x4200000000000000;
-  game.piece_boards[BLACK][BISHOP][2] = 0;
-
-  game.piece_boards[WHITE][ROOK][0] = 0;
-  game.piece_boards[WHITE][ROOK][1] = 0x81;
-  game.piece_boards[WHITE][ROOK][2] = 0;
-
-  game.piece_boards[BLACK][ROOK][0] =0;
-  game.piece_boards[BLACK][ROOK][1]= 0x8100000000000000;
-  game.piece_boards[BLACK][ROOK][2]= 0;
-
-  game.piece_boards[WHITE][QUEEN][0] = 0;
-  game.piece_boards[WHITE][QUEEN][1]= 0x10;
-  game.piece_boards[WHITE][QUEEN][2]= 0;
-
-  game.piece_boards[BLACK][QUEEN][0] = 0;
-  game.piece_boards[BLACK][QUEEN][1] = 0x1000000000000000;
-  game.piece_boards[BLACK][QUEEN][2] = 0;
-
-  game.piece_boards[WHITE][PAWN][0] = 0;
-  game.piece_boards[WHITE][PAWN][1]= 0xff00;
-  game.piece_boards[WHITE][PAWN][2]= 0;
-
-  game.piece_boards[BLACK][PAWN][0] = 0;
-  game.piece_boards[BLACK][PAWN][1] = 0xff000000000000;
-  game.piece_boards[BLACK][PAWN][2]= 0;
-
-  game.piece_boards[WHITE][KNIGHT][0] = 0;
-  game.piece_boards[WHITE][KNIGHT][1]= 0x24;
-  game.piece_boards[WHITE][KNIGHT][2]= 0;
-
-  game.piece_boards[BLACK][KNIGHT][0] = 0;
-  game.piece_boards[BLACK][KNIGHT][1]= 0x2400000000000000;
-  game.piece_boards[BLACK][KNIGHT][2]= 0;
-
-  game.piece_boards[WHITE][KING][0] = 0;
-  game.piece_boards[WHITE][KING][1]= 0x8;
-  game.piece_boards[WHITE][KING][2]=0;
-
-  game.piece_boards[BLACK][KING][0] = 0;
-  game.piece_boards[BLACK][KING][1]= 0x800000000000000;
-  game.piece_boards[BLACK][KING][2]= 0;
-
-  game.hv_sliders[WHITE][0] = 0;
-  game.hv_sliders[WHITE][1]= game.piece_boards[WHITE][ROOK][MIDDLE] |
-    game.piece_boards[WHITE][QUEEN][MIDDLE];
-  game.hv_sliders[WHITE][2]= 0;
-
-  game.hv_sliders[BLACK][0] = 0;
-  game.hv_sliders[BLACK][1]= game.piece_boards[BLACK][ROOK][MIDDLE] |
-    game.piece_boards[BLACK][QUEEN][MIDDLE];
-  game.hv_sliders[BLACK][2]= 0;
-
-  game.d_sliders[WHITE][0] = 0;
-  game.d_sliders[WHITE][1] = game.piece_boards[WHITE][BISHOP][MIDDLE] |
-    game.piece_boards[WHITE][QUEEN][MIDDLE];
-  game.d_sliders[WHITE][2] = 0;
-
-  game.d_sliders[BLACK][0] = 0;
-  game.d_sliders[BLACK][1]= game.piece_boards[BLACK][BISHOP][MIDDLE] |
-    game.piece_boards[BLACK][QUEEN][MIDDLE];
-  game.d_sliders[BLACK][2]= 0;
-  game.k_pos[WHITE][0] = 3;
-  game.k_pos[WHITE][1] = MIDDLE;
-  game.k_pos[BLACK][0] = 59;
-  game.k_pos[BLACK][1] = MIDDLE;
-
+  init_pieceboard(game);
   int piece = 0;
-  unsigned int from[2];
-  unsigned int to[2];
+  unsigned int from[2] = {0,0};
+  unsigned int to[2] = {0,0};
+  int turn = 0;
   while (1) {
-    if (turn == 1) {
-      printf_bitboard(game.boards[BLACK][0]);
-      printf_bitboard(game.boards[BLACK][1]);
-      printf_bitboard(game.boards[BLACK][2]);
-      printf_bitboard(game.boards[WHITE][0]);
-      printf_bitboard(game.boards[WHITE][1]);
-      printf_bitboard(game.boards[WHITE][2]);
+     if (turn == 0) {
+      print_boards(game);
       TYPE type;
-      printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n3: PAWN\n4: KNIGHT\nAny: KING\n");
+      printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
       scanf("%d", &piece);
       if (piece == 0) {
         type = BISHOP;
@@ -154,53 +106,53 @@ int main() {
         type = PAWN;
       } else if (piece == 4) {
         type = KNIGHT;
-      } else {
+      } else if (piece == 5) {
         type = KING;
+      } else {
+        return 0;
       }
 
-      printf("Enter from level (0 - 2)\n");
-      scanf("%d", from + 1);
-      printf("Enter from position (0 - 63)\n");
-      scanf("%d", from);
-      if (from[0] > 63) {
-        from[0] = 63;
-      } else if (from[0] < 0) {
-        from[0] = 0;
-      }
-      if (from[1] < 0) {
+      printf("Enter from level (0 - 2) and position (1 - 64)\n");
+      scanf("%u %u", &from[0], &from[1]);
+      if (from[1] > 63) {
+        from[1] = 63;
+      } else if (from[1] < 0) {
         from[1] = 0;
-      } else if (from[1] > 2) {
-        from[1] = 2;
+      }
+      if (from[0] < 0) {
+        from[0] = 0;
+      } else if (from[0] > 2) {
+        from[0] = 2;
       }
 
-      printf("Enter to level (0 - 2)\n");
-      scanf("%d", to + 1);
-      printf("Enter to position (0 - 63)\n");
-      scanf("%d", to);
-      if (to[0] > 63) {
-        to[0] = 63;
-      } else if (to[0] < 0) {
-        to[0] = 0;
-      }
-      if (to[1] < 0) {
+      printf("Enter to level (0 - 2) and position (1 - 64)\n");
+      scanf("%u %u", &to[0], &to[1]);
+      if (to[1] > 63) {
+        to[1] = 63;
+      } else if (to[1] < 0) {
         to[1] = 0;
-      } else if (to[1] > 2) {
-        to[1] = 2;
       }
-
-
-      game = make_move(&game, WHITE, type, from, to);
-      turn = 0;
+      if (to[0] < 0) {
+        to[0] = 0;
+      } else if (to[0] > 2) {
+        to[0] = 2;
+      }
+      to[1]--;
+      from[1]--;
+      printf("from[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+      make_move(&game, WHITE, type, from, to);
+      turn = 1;
     } else {
-      printf_bitboard(game.boards[WHITE][0]);
-      printf_bitboard(game.boards[WHITE][1]);
-      printf_bitboard(game.boards[WHITE][2]);
-      printf_bitboard(game.boards[BLACK][0]);
-      printf_bitboard(game.boards[BLACK][1]);
-      printf_bitboard(game.boards[BLACK][2]);
-      MOVE com_move = search(&game, BLACK, 3);
+      MOVE com_move = search(&game, BLACK, 4);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
+      unsigned int temp = to[0];
+      to[0] = to[1];
+      to[1] = temp;
+      temp = from[0];
+      from[0] = from[1];
+      from[1] = temp;
+      printf("\n\n\nBLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
       uint64_t cur = (ONE << from[0]);
       TYPE type;
       if (game.piece_boards[BLACK][BISHOP][from[1]] & cur) {
@@ -216,8 +168,8 @@ int main() {
       } else {
         type = KING;
       }
-      game = make_move(&game, BLACK, type, from, to);
-      turn = 1;
+      make_move(&game, BLACK, type, from, to);
+      turn = 0;
     }
   }
 }

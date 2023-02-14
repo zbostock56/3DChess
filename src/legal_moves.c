@@ -1,3 +1,10 @@
+/*
+TODO: Fix Rook Legals (Messing up middle board, could be more)
+      -> Effects Queen
+      King Legals (Messed up middle board, could be more)
+
+*/
+
 #include <legal_moves.h>
 
 void get_legal(SIDE player, unsigned int *pos, TYPE type,
@@ -56,16 +63,12 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
     *flags |= CHECK;
   }
 
-
-
   // LEGAL MOVES
   if (type == KING) {
     // KING
     uint64_t under_attack[3] = { 0, 0, 0 };
     uint64_t sa[2][3];
-
     uint64_t pl = KING_PL[pos[0]];
-    
     unsigned int s_pos;
     unsigned int coord[2];
     coord[1] = pos[1];
@@ -124,26 +127,18 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
       output[MIDDLE] = (ONE << pos[0]) ^ under_attack[MIDDLE];
       output[BOTTOM] = 0;
     }
-
-
-
-
+    output[TOP] &= ~args.boards[player][TOP];
+    output[MIDDLE] &= ~args.boards[player][MIDDLE];
+    output[BOTTOM] &= ~args.boards[player][BOTTOM];
     if ((output[TOP] | output[MIDDLE] | output[BOTTOM]) == 0 && in_check) {
       *flags |= MATE;
     }
-
-
-
     return;
   } else if (double_check) {
     output[TOP] = 0;
     output[MIDDLE] = 0;
     output[BOTTOM] = 0;
-    
-
     *flags |= D_CHECK;
-
-
     return;
   } else if (type == PAWN || type == KNIGHT) {
     // SIMPLE
@@ -360,44 +355,46 @@ void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
   uint64_t temp = ~sa[pos[1]] & pl[1];
   if (temp) {
     up &= UPPER_ZERO >> (63 - log2_lookup(temp & -temp));
+    attacks |= up & boards[enemy_t][pos[1]];
   }
-  attacks |= (temp & -temp) & boards[enemy_t][pos[1]];
 
-  uint64_t right = sa[pos[1]] & pl[2]; 
+  uint64_t right = sa[pos[1]] & pl[2];
   temp = ~sa[pos[1]] & pl[2];
   if (type == BISHOP) {
     if (temp) {
-      right &= UPPER_ZERO >> (63 -  log2_lookup(temp & -temp));
+      right &= UPPER_ZERO >> (63 - log2_lookup(temp & -temp));
+      attacks |= right & boards[enemy_t][pos[1]];
     }
   } else {
     if (temp) {
       right &= LOWER_ZERO << log2_lookup(temp);
+      attacks |= right & boards[enemy_t][pos[1]];
     }
   }
-  attacks |= temp & boards[enemy_t][pos[1]];
 
-  uint64_t down = sa[pos[1]] & pl[3]; 
+  uint64_t down = sa[pos[1]] & pl[3];
   temp = ~sa[pos[1]] & pl[3];
   if (temp) {
     down &= LOWER_ZERO << log2_lookup(temp);
+    attacks |= down & boards[enemy_t][pos[1]];
   }
-  attacks |= temp & boards[enemy_t][pos[1]];
 
-  uint64_t left = sa[pos[1]] & pl[4]; 
+  uint64_t left = sa[pos[1]] & pl[4];
   temp = ~sa[pos[1]] & pl[4];
   if (type == BISHOP) {
     if (temp) {
       left &= LOWER_ZERO << log2_lookup(temp);
+      attacks |= left & boards[enemy_t][pos[1]];
     }
   } else {
     if (temp) {
       left &= UPPER_ZERO >> (63 - log2_lookup(temp & -temp));
+      attacks |= left & boards[enemy_t][pos[1]];
     }
   }
-  attacks |= (temp & -temp) & boards[enemy_t][pos[1]];
 
   // COMBINE SHADOWS
-  sa[pos[1]] = up | right | down | left;  
+  sa[pos[1]] = up | right | down | left;
   // RENABLE ATTACKING
   sa[pos[1]] |= attacks;
 }
