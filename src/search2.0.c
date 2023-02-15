@@ -95,23 +95,18 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
       /*
         SELECT LEVEL
       */
-      current_position[1] = j;
+      current_position[0] = j;
       /*
         FIND MOST SIG BIT OF PIECES BOARD, THEN REMOVE FROM BITBOARD
       */
       uint64_t t_piece_board = args->piece_boards[to_move][i][j];
       while (t_piece_board) {
         unsigned int ms_bit[2] = {j, ms_bit_lookup(&t_piece_board)};
-        current_position[0] = ms_bit[1];
+        current_position[1] = ms_bit[1];
         current.from[0] = current_position[0];
         current.from[1] = current_position[1];
         uint64_t legals[3];
-        unsigned int temp = ms_bit[0];
-        ms_bit[0] = ms_bit[1];
-        ms_bit[1] = temp;
         get_legal(to_move, ms_bit, i, *args, legals, &player_flags);
-        ms_bit[1] = ms_bit[0];
-        ms_bit[0] = temp;
         if (depth == 0) {
           return evaluate(args, to_move, player_flags, enemy_flags);
         } else if ((player_flags & MATE) == 1 || (enemy_flags & MATE) == 1) {
@@ -129,14 +124,14 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
             /*
               SELECT LEGAL MOVE
             */
-            to_position[1] = k;
+            to_position[0] = k;
             /*
               GET SIG BIT FOR LEGAL MOVES BIT BOARD, THEN MAKE ALL MOVES
             */
             uint64_t t_legal_board = legals[k];
             while (t_legal_board) {
               unsigned int ms_bit_poss_legal[2] = {k, ms_bit_lookup(&t_legal_board)};
-              to_position[0] = ms_bit_poss_legal[1];
+              to_position[1] = ms_bit_poss_legal[1];
               current.to[0] = to_position[0];
               current.to[1] = to_position[1];
               BOARD_ARGS copy;
@@ -162,6 +157,10 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
 
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to) {
+  /*
+    To/From : {Level, Bitposition}
+  */
+
   SIDE enemy_t = to_move == WHITE ? BLACK : WHITE;
   uint64_t old_pos = LEVELS[from[1]];
   uint64_t new_pos = LEVELS[to[1]];
@@ -180,8 +179,8 @@ void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
     args->d_sliders[to_move][to[0]] |= new_pos;
   }
   if (p_type == KING) {
-    args->k_pos[to_move][0] = to[1];
-    args->k_pos[to_move][1] = to[0];
+    args->k_pos[to_move][0] = to[0];
+    args->k_pos[to_move][1] = to[1];
   }
 
   if (new_pos & args->boards[enemy_t][to[0]]) {

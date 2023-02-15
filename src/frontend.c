@@ -79,6 +79,105 @@ void print_boards(BOARD_ARGS game) {
    }
 }
 
+void print_game(BOARD_ARGS *args) {
+  char output[3][8][8] =
+  {{{'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'}},
+  {{'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'}},
+  {{'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'},
+  {'0','0','0','0','0','0','0','0'}}};
+
+  // Color, type, level
+  // 63 in top left, 0 in bottom right
+  // output[level][x][y]
+  /*
+           ( y )
+      0 1 2 3 4 5 6 7
+      -----------------
+   0  | 0 0 0 0 0 0 0 0
+   1  | 0 0 0 0 0 0 0 0
+   2  | 0 0 0 0 0 0 0 0
+*  3  | 0 0 0 0 0 0 0 0
+x  4  | 0 0 0 0 0 0 0 0
+*  5  | 0 0 0 0 0 0 0 0
+   6  | 0 0 0 0 0 0 0 0
+   7  | 0 0 0 0 0 0 0 0
+  */
+  uint64_t x = 0;
+  int m = -1;
+  char out = ' ';
+  // Color
+  for (int i = 0; i < 2; i++) {
+    // Type
+    for (int j = 0; j < 6; j++) {
+      // Level
+      for (int k = 0; k < 3; k++) {
+        x = args->piece_boards[i][j][k];
+        m = log2_lookup(x);
+        while (x != 0) {
+          if (j == PAWN) {
+            out = 'p';
+          } else if (j == KNIGHT) {
+            out = 'n';
+          } else if (j == BISHOP) {
+            out = 'b';
+          } else if (j == ROOK) {
+            out = 'r';
+          } else if (j == QUEEN) {
+            out = 'q';
+          } else if (j == KING) {
+            out = 'k';
+          }
+          if (i == WHITE) {
+            out = toupper(out);
+          }
+          // Division = x, Modulo = y
+          output[k][m / 8][m % 8] = out;
+          x ^= (ONE << m);
+          m = log2_lookup(x);
+        }
+      }
+    }
+  }
+
+  for (int i = 2; i > -1; i--) {
+    if (i == 0) {
+      printf("\nBOTTOM\n\n");
+    } else if (i == 1) {
+      printf("\nMIDDLE\n\n");
+    } else {
+      printf("\nTOP\n\n");
+    }
+    for (int j = 7; j > -1; j--) {
+      for (int k = 7; k > -1; k--) {
+        printf("%c", output[i][j][k]);
+      }
+      printf("\n");
+    }
+  }
+  printf("\n");
+  fflush(stdout);
+}
+
 int main() {
   /*
     LOAD INITIAL BOARD
@@ -92,7 +191,7 @@ int main() {
   int turn = 0;
   while (1) {
      if (turn == 0) {
-      print_boards(game);
+      print_game(&game);
       TYPE type;
       printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
       scanf("%d", &piece);
@@ -137,33 +236,28 @@ int main() {
       } else if (to[0] > 2) {
         to[0] = 2;
       }
-      to[1]--;
-      from[1]--;
       printf("from[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
       make_move(&game, WHITE, type, from, to);
       turn = 1;
     } else {
+      /*
+        To/From: {Level, Bitposition}
+      */
       MOVE com_move = search(&game, BLACK, 1);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
-      unsigned int temp = to[0];
-      to[0] = to[1];
-      to[1] = temp;
-      temp = from[0];
-      from[0] = from[1];
-      from[1] = temp;
       printf("\n\n\nBLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
-      uint64_t cur = (ONE << from[0]);
+      uint64_t cur = (ONE << from[1]);
       TYPE type;
-      if (game.piece_boards[BLACK][BISHOP][from[1]] & cur) {
+      if (game.piece_boards[BLACK][BISHOP][from[0]] & cur) {
         type = BISHOP;
-      } else if (game.piece_boards[BLACK][ROOK][from[1]] & cur) {
+      } else if (game.piece_boards[BLACK][ROOK][from[0]] & cur) {
         type = ROOK;
-      } else if (game.piece_boards[BLACK][QUEEN][from[1]] & cur) {
+      } else if (game.piece_boards[BLACK][QUEEN][from[0]] & cur) {
         type = QUEEN;
-      } else if (game.piece_boards[BLACK][PAWN][from[1]] & cur) {
+      } else if (game.piece_boards[BLACK][PAWN][from[0]] & cur) {
         type = PAWN;
-      } else if (game.piece_boards[BLACK][KNIGHT][from[1]] & cur) {
+      } else if (game.piece_boards[BLACK][KNIGHT][from[0]] & cur) {
         type = KNIGHT;
       } else {
         type = KING;

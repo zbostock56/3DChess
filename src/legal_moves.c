@@ -9,6 +9,15 @@ TODO: Fix Rook Legals (Messing up middle board, could be more)
 
 void get_legal(SIDE player, unsigned int *pos, TYPE type,
                BOARD_ARGS args, uint64_t *output, uint32_t *flags) {
+  unsigned int temp = pos[1];
+  pos[1] = pos[0];
+  pos[0] = temp;
+  /*
+    EVIL BAND-AID
+    POS[1] = LEVEL
+    POS[0] = BITPOSITION
+  */
+
   //CHECK DETECTION
   unsigned int k_pos = args.k_pos[player][0];
   SIDE enemy_t = player == WHITE ? BLACK : WHITE;
