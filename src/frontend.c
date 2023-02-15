@@ -143,7 +143,7 @@ int main() {
       make_move(&game, WHITE, type, from, to);
       turn = 1;
     } else {
-      MOVE com_move = search(&game, BLACK, 4);
+      MOVE com_move = search(&game, BLACK, 1);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
       unsigned int temp = to[0];
