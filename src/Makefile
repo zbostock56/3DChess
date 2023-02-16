@@ -1,10 +1,6 @@
 
 default:
-	gcc -Wall -Werror -I../include -o 3DChess legal_moves.c search.c evaluate.c game_tester.c log2.c ps.c
-
-debug:
-	gcc -Wall -Werror -g -I../include -o 3DChess legal_moves.c search.c evaluate.c game_tester.c log2.c ps.c
-
-play:
 	gcc -Wall -g -I ../include -o 3DChess legal_moves.c search2.0.c evaluate.c frontend.c log2.c ps.c
 
+optimized:
+	gcc -Wall -O3 -I ../include -o 3DChess legal_moves.c search2.0.c evaluate.c frontend.c log2.c ps.c

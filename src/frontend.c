@@ -105,23 +105,6 @@ void print_game(BOARD_ARGS *args) {
   {'0','0','0','0','0','0','0','0'},
   {'0','0','0','0','0','0','0','0'},
   {'0','0','0','0','0','0','0','0'}}};
-
-  // Color, type, level
-  // 63 in top left, 0 in bottom right
-  // output[level][x][y]
-  /*
-           ( y )
-      0 1 2 3 4 5 6 7
-      -----------------
-   0  | 0 0 0 0 0 0 0 0
-   1  | 0 0 0 0 0 0 0 0
-   2  | 0 0 0 0 0 0 0 0
-*  3  | 0 0 0 0 0 0 0 0
-x  4  | 0 0 0 0 0 0 0 0
-*  5  | 0 0 0 0 0 0 0 0
-   6  | 0 0 0 0 0 0 0 0
-   7  | 0 0 0 0 0 0 0 0
-  */
   uint64_t x = 0;
   int m = -1;
   char out = ' ';
@@ -158,7 +141,6 @@ x  4  | 0 0 0 0 0 0 0 0
       }
     }
   }
-
   for (int i = 2; i > -1; i--) {
     if (i == 0) {
       printf("\nBOTTOM\n\n");
@@ -182,7 +164,17 @@ int main() {
   /*
     LOAD INITIAL BOARD
   */
-
+ /*
+ unsigned int moves[6][2] = {
+    {1, 12},
+    {1, 20},
+    {1, 13},
+    {1, 21},
+    {1, 14},
+    {1, 22},
+  };
+  */
+  //int game_score = 0;
   BOARD_ARGS game;
   init_pieceboard(game);
   int piece = 0;
@@ -243,10 +235,11 @@ int main() {
       /*
         To/From: {Level, Bitposition}
       */
-      MOVE com_move = search(&game, BLACK, 1);
+      MOVE com_move = search(&game, BLACK, 10);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
       printf("\n\n\nBLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+      printf("COMPUTER EVAL: %d\n", com_move.score);
       uint64_t cur = (ONE << from[1]);
       TYPE type;
       if (game.piece_boards[BLACK][BISHOP][from[0]] & cur) {

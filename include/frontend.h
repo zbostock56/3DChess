@@ -57,9 +57,9 @@
   game.d_sliders[BLACK][1]= game.piece_boards[BLACK][BISHOP][MIDDLE] |\
   game.piece_boards[BLACK][QUEEN][MIDDLE];\
   game.d_sliders[BLACK][2]= 0;\
-  game.k_pos[WHITE][0] = 3;\
-  game.k_pos[WHITE][1] = MIDDLE;\
-  game.k_pos[BLACK][0] = 59;\
-  game.k_pos[BLACK][1] = MIDDLE;\
+  game.k_pos[WHITE][1] = 3;\
+  game.k_pos[WHITE][0] = MIDDLE;\
+  game.k_pos[BLACK][1] = 59;\
+  game.k_pos[BLACK][0] = MIDDLE;\
 }
 
