@@ -54,11 +54,9 @@ void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
   }
 }
 
-//long stuff = 0;
-
+unsigned long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
- //stuff++;
- //printf("%ld\n", stuff);
+ stuff++;
  SIDE enemy = to_move == WHITE ? BLACK : WHITE;
   /*
     PLAYER/ENEMY FLAGS

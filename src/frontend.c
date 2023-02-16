@@ -1,5 +1,6 @@
 #include <psuedo_legal_moves.h>
 #include <frontend.h>
+extern unsigned long long stuff;
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth);
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to);
@@ -180,7 +181,7 @@ int main() {
   int piece = 0;
   unsigned int from[2] = {0,0};
   unsigned int to[2] = {0,0};
-  int turn = 0;
+  int turn = 1;
   while (1) {
      if (turn == 0) {
       print_game(&game);
@@ -202,7 +203,6 @@ int main() {
       } else {
         return 0;
       }
-
       printf("Enter from level (0 - 2) and position (1 - 64)\n");
       scanf("%u %u", &from[0], &from[1]);
       if (from[1] > 63) {
@@ -235,7 +235,7 @@ int main() {
       /*
         To/From: {Level, Bitposition}
       */
-      MOVE com_move = search(&game, BLACK, 10);
+      MOVE com_move = search(&game, BLACK, 2);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
       printf("\n\n\nBLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
@@ -257,6 +257,7 @@ int main() {
       }
       make_move(&game, BLACK, type, from, to);
       turn = 0;
+      printf("%llu\n", stuff);
     }
   }
 }

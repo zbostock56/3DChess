@@ -32,7 +32,7 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
   printf_bitboards(rk_sa);*/
 
   unsigned int double_check = 0;
-  unsigned int in_check = 0;
+  uint64_t in_check = 0;
   uint64_t d_check[3] = { 0, 0, 0 };
   slider_check_detect(bk_sa, bishop_king, BISHOP_PL, args.k_pos[player],
                       args.d_sliders[enemy_t], d_check, &double_check);
