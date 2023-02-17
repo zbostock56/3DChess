@@ -1,4 +1,4 @@
-#if 0
+
 #define init_pieceboard(game) {\
   game.boards[WHITE][TOP] = 0;\
   game.boards[WHITE][MIDDLE] = 0xffff;\
@@ -63,8 +63,8 @@
   game.k_pos[BLACK][MIDDLE] = 59;\
   game.k_pos[BLACK][TOP] = MIDDLE;\
 }
-#endif
 
+#if 0
 // BLACK KING IN CHECK TEST POSITION
 #define init_pieceboard(game) {\
   game.boards[WHITE][TOP] = 0x800000000080000;\
@@ -126,4 +126,4 @@
   game.k_pos[BLACK][MIDDLE] = 59;\
   game.k_pos[BLACK][TOP] = MIDDLE;\
 }
-
+#endif

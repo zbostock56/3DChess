@@ -52,23 +52,40 @@ void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
   }
 }
 
+unsigned int get_max_min(int is_max, unsigned int one, unsigned int two) {
+  if (is_max) {
+    // FINDING FOR WHITE
+    if (one > two)
+      return one;
+    else
+      return two;
+  } else {
+    // FINDING FOR BLACK
+    if (one < two)
+      return one;
+    else
+      return two;
+  }
+}
+
 unsigned long long stuff = 0;
-MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
+MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
+             unsigned int alpha, unsigned int beta) {
+//MOVE search (s_info *args) {
  stuff++;
  SIDE enemy = to_move == WHITE ? BLACK : WHITE;
-  /*
-    PLAYER/ENEMY FLAGS
-    MATE : 0x00000001
-           0b0001
-    D_CHECK: 0x00000002
-             0b0010
-    CHECK: 0x00000004
-           0b0100
-  */
   uint32_t player_flags = 0;
   uint32_t enemy_flags = 0;
   MOVE best;
   MOVE current;
+  /*
+
+  s_info info;
+  pthread_t thread;
+  int thread_return;
+  thread_return = pthread_create(&thread, NULL, search, (void *));
+
+  */
   if (to_move == WHITE) {
     best.score = INT_MIN;
   } else {
@@ -138,7 +155,14 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
               BOARD_ARGS copy;
               make_temp_copy(args, &copy);
               make_move(&copy, to_move, i, ms_bit, ms_bit_poss_legal);
-              current = search(&copy, enemy, depth - 1);
+              /*
+
+              info.args = copy;
+              info.depth = depth - 1;
+              info.to_move = (!player == WHITE ? WHITE : BLACK);
+
+              */
+              current = search(&copy, enemy, depth - 1, alpha, beta);
               if ((to_move == WHITE && current.score > best.score) ||
                 (to_move == BLACK && current.score < best.score)) {
                 best.score = current.score;
@@ -146,6 +170,16 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
                 best.from[1] = current_position[1];
                 best.to[0] = to_position[0];
                 best.to[1] = to_position[1];
+                if (to_move == WHITE) {
+                  // WHITE = 0; BLACK = 1
+                  alpha = get_max_min(!to_move, alpha, best.score);
+                } else {
+                  beta = get_max_min(!to_move, beta, best.score);
+                }
+
+              }
+              if (beta <= alpha) {
+                break;
               }
             }
           }
