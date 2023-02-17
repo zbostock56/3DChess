@@ -6,6 +6,7 @@ void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to);
 void printf_bitboards(uint64_t *b) {
   for (int i = 0; i < 3; i++) {
+    printf("%s\n", i == 0 ? "TOP" : i == 1 ? "MIDDLE" : "BOTTOM");
     printf_bitboard(b[i]);
   }
 }
@@ -142,17 +143,18 @@ void print_game(BOARD_ARGS *args) {
       }
     }
   }
-  for (int i = 2; i > -1; i--) {
+  for (int i = 0; i < 3; i++) {
     if (i == 0) {
-      printf("\nBOTTOM\n\n");
+      printf("\nTOP\n\n");
     } else if (i == 1) {
       printf("\nMIDDLE\n\n");
     } else {
-      printf("\nTOP\n\n");
+      printf("\nBOTTOM\n\n");
     }
     for (int j = 7; j > -1; j--) {
       for (int k = 7; k > -1; k--) {
         printf("%c", output[i][j][k]);
+        printf(" ");
       }
       printf("\n");
     }

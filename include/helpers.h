@@ -11,6 +11,9 @@
 #define P_VAL (1)
 #define K_VAL (3)
 
+#define PIECE_TYPES 6
+#define NUM_LEVELS 3
+
 static const uint64_t ONE = 1;
 
 typedef enum {

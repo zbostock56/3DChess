@@ -14,8 +14,6 @@
   -> Once depth or checkmate has been hit, return the eval
      up the tree to be used in choosing the best move
 */
-#define PIECE_TYPES 6
-#define NUM_LEVELS 3
 
 int ms_bit_lookup(uint64_t *input) {
   int ms_bit_poss = log2_lookup(*input);
@@ -78,6 +76,10 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
   }
   best.args = args;
   best.to_move = to_move;
+  best.to[0] = 0xBAADF00D;
+  best.to[1] = 0xBAADF00D;
+  best.from[0] = 0xBAADF00D;
+  best.from[1] = 0xBAADF00D;
   unsigned int current_position[2];
   unsigned int to_position[2];
   uint64_t junk[3];
@@ -85,6 +87,7 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
     BREAKS WHEN KING BEING EVALUATED ON BLACK AFTER MOVING TO TOP LEVEL
   */
   get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
+  //for (int i = 5; i > -1; i--) {
   for (int i = 0; i < PIECE_TYPES; i++) {
     /*
       SELECT PIECE TYPE
