@@ -11,11 +11,13 @@ MOVE evaluate(BOARD_ARGS *args, SIDE to_move, uint32_t p_flags, uint32_t e_flags
 /*
   Knight Rating:
   -> Much higher at the start of the game, then decreases
-  [+0.5]  (0) Knight moves up from back rank
-  [+1.5]  (1) Knight moves into middle of board
+  [+1.0]  (0) Knight moves up from back rank
+  [+1.0]  (1) Knight moves up to second from back rank
+  [+3.0]  (2) Knight moves into middle of board
 */
 
 extern uint64_t n_rating[2] = {
+  0b0000000011111111000000000000000000000000000000001111111100000000,
   0b0000000000000000111111111000000110000001111111110000000000000000,
   0b0000000000000000000000000111111001111110000000000000000000000000
 };
@@ -24,17 +26,20 @@ extern uint64_t n_rating[2] = {
   King Rating:
   -> Decreases in value as the game progresses
   [+1.0]  (0) King stays in the back rank, but only in the center four squares
-  [+4.0]  (1) King moves to either the right or the left of the board
+  [+2.0]  (1) King moves slightly away from back rank
+  [+4.0]  (2) King moves to either the right or the left of the board
 */
 
 extern uint64_t wk_rating[2] = {
   0b0000000000000000000000000000000000000000000000000000000000111100,
-  0b0000000000000000000000000000000000000000100000011100001111000011
+  0b0000000000000000000000000000000000000000100000010000000000000000,
+  0b0000000000000000000000000000000000000000000000001100001111000011
 };
 
 extern uint64_t bk_rating[2] = {
-  0b1100001111000011100000010000000000000000100000011100001111000011,
-  0b0011110000000000000000000000000000000000000000000000000000000000
+  0b0011110000000000000000000000000000000000000000000000000000000000,
+  0b0000000000000000100000010000000000000000000000000000000000000000,
+  0b1100001111000011000000000000000000000000000000000000000000000000
 };
 
 /*
@@ -42,7 +47,7 @@ extern uint64_t bk_rating[2] = {
   -> Increases in value as the game progresses
   [+1.0]  (0) Queen moves generally into the middle of the board
   [+2.0]  (1) Queen closer to the center of the board
-  [+2.5]  (2) Queen takes control of the center
+  [+4.0]  (2) Queen takes control of the center
 */
 
 extern uint64_t q_rating[3] = {
@@ -54,16 +59,19 @@ extern uint64_t q_rating[3] = {
 /*
   Rook Rating:
   -> Increases as the game progresses
-  [+0.5]  (0) Rook on the back rank
-  [+1.0]  (1) Rook on the second to back rank
+  [+1.0]  (0) Rook takes control of the center
+  [+2.0]  (1) Rook on the back rank
+  [+2.0]  (2) Rook on the second to back rank
 */
 
 extern uint64_t wr_rating[2] = {
+  0b0000000000000000011111000111110001111100011111000000000000000000,
   0b0000000000000000000000000000000000000000000000000000000011111111,
   0b0000000000000000000000000000000000000000000000000111111000000000
 };
 
 extern uint64_t br_rating[2] = {
+  0b0000000000000000011111000111110001111100011111000000000000000000,
   0b1111111100000000000000000000000000000000000000000000000000000000,
   0b0000000001111110000000000000000000000000000000000000000000000000
 };
@@ -75,29 +83,29 @@ extern uint64_t br_rating[2] = {
   [+1.0]  (0) Starting pawn move, one square from start
   [+1.0]  (1) Double move from starting position
   [+2.0]  (2) Taking center control
-  [+3.0]  (3) Promotion
+  ** [+3.0]  (3) Promotion **
 */
 
 extern uint64_t wp_rating[4] = {
   0b0000000000000000000000000000000000000000000000001111111100000000,
   0b0000000000000000000000000000000000000000111111110000000000000000,
-  0b0000000000000000000000000000000000111100001111000000000000000000,
-  0b1111111100000000000000000000000000000000000000000000000000000000
+  0b0000000000000000000000000000000000111100001111000000000000000000
+  //0b1111111100000000000000000000000000000000000000000000000000000000
 };
 
 extern uint64_t bp_rating[4] = {
   0b0000000011111111000000000000000000000000000000000000000000000000,
   0b0000000000000000111111110000000000000000000000000000000000000000,
-  0b0000000000000000001111000011110000000000000000000000000000000000,
-  0b0000000000000000000000000000000000000000000000000000000011111111
+  0b0000000000000000001111000011110000000000000000000000000000000000
+ //0b0000000000000000000000000000000000000000000000000000000011111111
 }
 
 /*
   Bishop Rating:
   -> Increases as the game progresses
   [+1.0]  (0) Bishop move onto second rank
-  [+1.5]  (1) Second and third rank
-  [+2.5]  (2) Takes control of center with emphesis on high value diagonals
+  [+2.0]  (1) Second and third rank
+  [+3.0]  (2) Takes control of center with emphesis on high value diagonals
 */
 
 extern uint64_t wb_rating[3] = {
@@ -112,4 +120,34 @@ extern uint64_t bb_rating[3] = {
   0b0000000000000000000000000011110000111100001001000000000000000000
 };
 
-
+extern uint64_t ratings[10][3];
+ratings[0][1] = wb_rating[0];
+ratings[0][2] = wb_rating[1];
+ratings[0][3] = wb_rating[2];
+ratings[1][1] = bb_rating[0];
+ratings[1][2] = bb_rating[1];
+ratings[1][3] = bb_rating[2];
+ratings[2][1] = wr_rating[0];
+ratings[2][2] = wr_rating[1];
+ratings[2][3] = wr_rating[2];
+ratings[3][1] = br_rating[0];
+ratings[3][2] = br_rating[1];
+ratings[3][3] = br_rating[2];
+ratings[4][1] = q_rating[0];
+ratings[4][2] = q_rating[1];
+ratings[4][3] = q_rating[2];
+ratings[5][1] = wp_rating[0];
+ratings[5][2] = wp_rating[1];
+ratings[5][3] = wp_rating[2];
+ratings[6][1] = bp_rating[0];
+ratings[6][2] = bp_rating[1];
+ratings[6][3] = bp_rating[2];
+ratings[7][1] = n_rating[0];
+ratings[7][2] = n_rating[1];
+ratings[7][3] = n_rating[2];
+ratings[8][1] = wk_rating[0];
+ratings[8][2] = wk_rating[1];
+ratings[8][3] = wk_rating[2];
+ratings[9][1] = bk_rating[0];
+ratings[9][2] = bk_rating[1];
+ratings[9][3] = bk_rating[2];

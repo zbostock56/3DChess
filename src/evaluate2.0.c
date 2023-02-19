@@ -1,6 +1,6 @@
 #include <evaluate.h>
 
-MOVE evaluate(BOARD_ARGS *args, SIDE to_move, uint32_t p_flags, uint32_t e_flags) {
+MOVE evaluate(BOARD_ARGS *args, SIDE to_move, uint32_t p_flags, uint32_t e_flags, unsigned int n_turn) {
   MOVE move;
   if ((p_flags & MATE) && to_move == WHITE) {
     move.score = INT_MIN;
@@ -77,6 +77,15 @@ unsigned int get_piece_num(uint64_t *board) {
       sum++;
     }
   }
-
   return sum;
+}
+
+unsigned int get_weighted_rating(unsigned int n_turn, uint64_t rating_board,
+                                 uint64_t cur, TYPE p_type) {
+  unsigned int pos_multiplier = (unsigned int)(0.01 * (turn * turn));
+  unsigned int neg_multiplier = (unsigned int)((-0.0001 * (turn * turn * turn)) + 3);
+  uint64_t output = rating_board & cur;
+  if (neg_multiplier < 0) {
+    neg_multipler = 0;
+  }
 }

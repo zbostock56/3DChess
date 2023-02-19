@@ -36,8 +36,6 @@ typedef enum {
   BOTTOM = 2
 } LEVEL;
 /*
-  k_pos: [] = position
-  k_pos: [][] = level
   boards: Overall
   piece_boards: only contains pieces
   hv_sliders: contains horz and vert sliding pieces
