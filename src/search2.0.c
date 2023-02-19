@@ -70,7 +70,8 @@ unsigned int get_max_min(int is_max, unsigned int one, unsigned int two) {
 
 unsigned long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
-             unsigned int alpha, unsigned int beta) {
+            unsigned int alpha, unsigned int beta) {
+//MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
 //MOVE search (s_info *args) {
  stuff++;
  SIDE enemy = to_move == WHITE ? BLACK : WHITE;
@@ -176,7 +177,6 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                 } else {
                   beta = get_max_min(!to_move, beta, best.score);
                 }
-
               }
               if (beta <= alpha) {
                 break;
