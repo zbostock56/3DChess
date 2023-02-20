@@ -125,58 +125,166 @@ unsigned int get_weighted_rating(unsigned int turn,
     rating_order[5] = 9;
   }
   temp = get_piece_num_sboard((ratings[rating_order[0]][0]
-                               & args->boards[player][BISHOP]));
+                               & args->piece_boards[player][BISHOP][BOTTOM]));
+  br += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[0]][0]
+                               & args->piece_boards[player][BISHOP][MIDDLE]));
+  br += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[0]][0]
+                               & args->piece_boards[player][BISHOP][TOP]));
   br += temp;
   temp = get_piece_num_sboard((ratings[rating_order[0]][1]
-                               & args->boards[player][BISHOP]));
+                               & args->piece_boards[player][BISHOP][BOTTOM]));
+  br += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[0]][1]
+                               & args->piece_boards[player][BISHOP][MIDDLE]));
+  br += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[0]][1]
+                               & args->piece_boards[player][BISHOP][TOP]));
   br += (temp * 2);
   temp = get_piece_num_sboard((ratings[rating_order[0]][2]
-                               & args->boards[player][BISHOP]));
+                               & args->piece_boards[player][BISHOP][BOTTOM]));
+  br += (temp * 3);
+  temp = get_piece_num_sboard((ratings[rating_order[0]][2]
+                               & args->piece_boards[player][BISHOP][MIDDLE]));
+  br += (temp * 3);
+  temp = get_piece_num_sboard((ratings[rating_order[0]][2]
+                               & args->piece_boards[player][BISHOP][TOP]));
   br += (temp * 3);
   temp = get_piece_num_sboard((ratings[rating_order[1]][0]
-                               & args->boards[player][ROOK]));
+                               & args->piece_boards[player][ROOK][BOTTOM]));
+  rr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[1]][0]
+                               & args->piece_boards[player][ROOK][MIDDLE]));
+  rr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[1]][0]
+                               & args->piece_boards[player][ROOK][TOP]));
   rr += temp;
   temp = get_piece_num_sboard((ratings[rating_order[1]][1]
-                               & args->boards[player][ROOK]));
+                               & args->piece_boards[player][ROOK][BOTTOM]));
+  rr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[1]][1]
+                               & args->piece_boards[player][ROOK][MIDDLE]));
+  rr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[1]][1]
+                               & args->piece_boards[player][ROOK][TOP]));
   rr += (temp * 2);
   temp = get_piece_num_sboard((ratings[rating_order[1]][2]
-                               & args->boards[player][ROOK]));
+                               & args->piece_boards[player][ROOK][BOTTOM]));
+  rr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[1]][2]
+                               & args->piece_boards[player][ROOK][MIDDLE]));
+  rr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[1]][2]
+                               & args->piece_boards[player][ROOK][TOP]));
   rr += (temp * 2);
   temp = get_piece_num_sboard((ratings[rating_order[2]][0]
-                               & args->boards[player][QUEEN]));
+                               & args->piece_boards[player][QUEEN][BOTTOM]));
+  qr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[2]][0]
+                               & args->piece_boards[player][QUEEN][MIDDLE]));
+  qr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[2]][0]
+                               & args->piece_boards[player][QUEEN][TOP]));
   qr += temp;
   temp = get_piece_num_sboard((ratings[rating_order[2]][1]
-                               & args->boards[player][QUEEN]));
+                               & args->piece_boards[player][QUEEN][BOTTOM]));
+  qr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[2]][1]
+                               & args->piece_boards[player][QUEEN][MIDDLE]));
+  qr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[2]][1]
+                               & args->piece_boards[player][QUEEN][TOP]));
   qr += (temp * 2);
   temp = get_piece_num_sboard((ratings[rating_order[2]][2]
-                               & args->boards[player][QUEEN]));
+                               & args->piece_boards[player][QUEEN][BOTTOM]));
+  qr += (temp * 4);
+  temp = get_piece_num_sboard((ratings[rating_order[2]][2]
+                               & args->piece_boards[player][QUEEN][MIDDLE]));
+  qr += (temp * 4);
+  temp = get_piece_num_sboard((ratings[rating_order[2]][2]
+                               & args->piece_boards[player][QUEEN][TOP]));
   qr += (temp * 4);
   temp = get_piece_num_sboard((ratings[rating_order[3]][0]
-                               & args->boards[player][PAWN]));
+                               & args->piece_boards[player][PAWN][BOTTOM]));
+  pr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[3]][0]
+                               & args->piece_boards[player][PAWN][MIDDLE]));
+  pr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[3]][0]
+                               & args->piece_boards[player][PAWN][TOP]));
   pr += temp;
   temp = get_piece_num_sboard((ratings[rating_order[3]][1]
-                               & args->boards[player][PAWN]));
+                               & args->piece_boards[player][PAWN][BOTTOM]));
+  pr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[3]][1]
+                               & args->piece_boards[player][PAWN][MIDDLE]));
+  pr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[3]][1]
+                               & args->piece_boards[player][PAWN][TOP]));
   pr += temp;
   temp = get_piece_num_sboard((ratings[rating_order[3]][2]
-                               & args->boards[player][PAWN]));
+                               & args->piece_boards[player][PAWN][BOTTOM]));
+  pr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[3]][2]
+                               & args->piece_boards[player][PAWN][MIDDLE]));
+  pr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[3]][2]
+                               & args->piece_boards[player][PAWN][TOP]));
   pr += (temp * 2);
   temp = get_piece_num_sboard((ratings[rating_order[4]][0]
-                               & args->boards[player][KNIGHT]));
+                               & args->piece_boards[player][KNIGHT][BOTTOM]));
+  nr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[4]][0]
+                               & args->piece_boards[player][KNIGHT][MIDDLE]));
+  nr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[4]][0]
+                               & args->piece_boards[player][KNIGHT][TOP]));
   nr += temp;
   temp = get_piece_num_sboard((ratings[rating_order[4]][1]
-                               & args->boards[player][KNIGHT]));
+                               & args->piece_boards[player][KNIGHT][BOTTOM]));
+  nr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[4]][1]
+                               & args->piece_boards[player][KNIGHT][MIDDLE]));
+  nr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[4]][1]
+                               & args->piece_boards[player][KNIGHT][TOP]));
   nr += temp;
   temp = get_piece_num_sboard((ratings[rating_order[4]][2]
-                               & args->boards[player][KNIGHT]));
+                               & args->piece_boards[player][KNIGHT][BOTTOM]));
+  nr += (temp * 3);
+  temp = get_piece_num_sboard((ratings[rating_order[4]][2]
+                               & args->piece_boards[player][KNIGHT][MIDDLE]));
+  nr += (temp * 3);
+  temp = get_piece_num_sboard((ratings[rating_order[4]][2]
+                               & args->piece_boards[player][KNIGHT][TOP]));
   nr += (temp * 3);
   temp = get_piece_num_sboard((ratings[rating_order[5]][0]
-                               & args->boards[player][KING]));
+                               & args->piece_boards[player][KING][BOTTOM]));
+  kr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[5]][0]
+                               & args->piece_boards[player][KING][MIDDLE]));
+  kr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[5]][0]
+                               & args->piece_boards[player][KING][TOP]));
   kr += temp;
   temp = get_piece_num_sboard((ratings[rating_order[5]][1]
-                               & args->boards[player][KING]));
+                               & args->piece_boards[player][KING][BOTTOM]));
+  kr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[5]][1]
+                               & args->piece_boards[player][KING][MIDDLE]));
+  kr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[5]][1]
+                               & args->piece_boards[player][KING][TOP]));
   kr += (temp * 2);
   temp = get_piece_num_sboard((ratings[rating_order[5]][2]
-                               & args->boards[player][KING]));
+                               & args->piece_boards[player][KING][BOTTOM]));
+  kr += (temp * 4);
+  temp = get_piece_num_sboard((ratings[rating_order[5]][2]
+                               & args->piece_boards[player][KING][MIDDLE]));
+  kr += (temp * 4);
+  temp = get_piece_num_sboard((ratings[rating_order[5]][2]
+                               & args->piece_boards[player][KING][TOP]));
   kr += (temp * 4);
   if ((pr * pn_multiplier) < 0) {
     pr = 0;

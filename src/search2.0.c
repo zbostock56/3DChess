@@ -175,13 +175,20 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                   best.to[0] = to_position[0];
                   best.to[1] = to_position[1];
                   best.rating = current.rating;
-                } else if (!(player_flags & MATE) || !(enemy_flags & MATE)) {
+                } else if ((enemy_flags & MATE)){
                   best.score = current.score;
                   best.from[0] = current_position[0];
                   best.from[1] = current_position[1];
                   best.to[0] = to_position[0];
                   best.to[1] = to_position[1];
-                  best.rating = current.rating;
+                  best.rating = INT_MAX;
+                } else if ((enemy_flags & CHECK) || (enemy_flags & D_CHECK)) {
+                  best.score = current.score;
+                  best.from[0] = current_position[0];
+                  best.from[1] = current_position[1];
+                  best.to[0] = to_position[0];
+                  best.to[1] = to_position[1];
+                  best.rating = current.rating * 10;
                 }
                 if (to_move == WHITE) {
                   // WHITE = 0; BLACK = 1
