@@ -1,6 +1,7 @@
 #include <evaluate.h>
 
-MOVE evaluate(BOARD_ARGS *args, SIDE to_move, uint32_t p_flags, uint32_t e_flags, unsigned int n_turn) {
+MOVE evaluate(BOARD_ARGS *args, SIDE to_move,
+              uint32_t p_flags, uint32_t e_flags, unsigned int turn) {
   MOVE move;
   if ((p_flags & MATE) && to_move == WHITE) {
     move.score = INT_MIN;
@@ -64,7 +65,7 @@ MOVE evaluate(BOARD_ARGS *args, SIDE to_move, uint32_t p_flags, uint32_t e_flags
     material_score -= Q_VAL;
   }
   move.score = material_score;
-
+  move.rating = get_weighted_rating(turn, to_move, args);
   return move;
 }
 
@@ -80,12 +81,120 @@ unsigned int get_piece_num(uint64_t *board) {
   return sum;
 }
 
-unsigned int get_weighted_rating(unsigned int n_turn, uint64_t rating_board,
-                                 uint64_t cur, TYPE p_type) {
-  unsigned int pos_multiplier = (unsigned int)(0.01 * (turn * turn));
-  unsigned int neg_multiplier = (unsigned int)((-0.0001 * (turn * turn * turn)) + 3);
-  uint64_t output = rating_board & cur;
-  if (neg_multiplier < 0) {
-    neg_multipler = 0;
+unsigned int get_piece_num_sboard(uint64_t board) {
+  unsigned int sum = 0;
+  uint64_t ONE = 1;
+  while (board) {
+    board ^= (ONE << log2_lookup(board));
+    sum++;
   }
+  return sum;
+}
+
+unsigned int get_weighted_rating(unsigned int turn,
+                                 SIDE player, BOARD_ARGS *args) {
+  unsigned int pos_multiplier = (unsigned int)(0.022 * (turn * turn));
+  int neg_multiplier = (unsigned int)((-0.0001 * (turn * turn * turn)) + 4);
+  if (neg_multiplier <= 1)
+    neg_multiplier = 1;
+  unsigned int pn_multiplier = (unsigned int) neg_multiplier;
+  unsigned int pr = 0;
+  unsigned int nr = 0;
+  unsigned int br = 0;
+  unsigned int rr = 0;
+  unsigned int qr = 0;
+  unsigned int kr = 0;
+  unsigned int temp = 0;
+  int rating_order[6];
+  if (neg_multiplier < 0) {
+    neg_multiplier = 0;
+  }
+  if (player == WHITE) {
+    rating_order[0] = 0;
+    rating_order[1] = 2;
+    rating_order[2] = 4;
+    rating_order[3] = 5;
+    rating_order[4] = 7;
+    rating_order[5] = 8;
+  } else {
+    rating_order[0] = 1;
+    rating_order[1] = 3;
+    rating_order[2] = 4;
+    rating_order[3] = 6;
+    rating_order[4] = 7;
+    rating_order[5] = 9;
+  }
+  temp = get_piece_num_sboard((ratings[rating_order[0]][0]
+                               & args->boards[player][BISHOP]));
+  br += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[0]][1]
+                               & args->boards[player][BISHOP]));
+  br += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[0]][2]
+                               & args->boards[player][BISHOP]));
+  br += (temp * 3);
+  temp = get_piece_num_sboard((ratings[rating_order[1]][0]
+                               & args->boards[player][ROOK]));
+  rr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[1]][1]
+                               & args->boards[player][ROOK]));
+  rr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[1]][2]
+                               & args->boards[player][ROOK]));
+  rr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[2]][0]
+                               & args->boards[player][QUEEN]));
+  qr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[2]][1]
+                               & args->boards[player][QUEEN]));
+  qr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[2]][2]
+                               & args->boards[player][QUEEN]));
+  qr += (temp * 4);
+  temp = get_piece_num_sboard((ratings[rating_order[3]][0]
+                               & args->boards[player][PAWN]));
+  pr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[3]][1]
+                               & args->boards[player][PAWN]));
+  pr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[3]][2]
+                               & args->boards[player][PAWN]));
+  pr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[4]][0]
+                               & args->boards[player][KNIGHT]));
+  nr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[4]][1]
+                               & args->boards[player][KNIGHT]));
+  nr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[4]][2]
+                               & args->boards[player][KNIGHT]));
+  nr += (temp * 3);
+  temp = get_piece_num_sboard((ratings[rating_order[5]][0]
+                               & args->boards[player][KING]));
+  kr += temp;
+  temp = get_piece_num_sboard((ratings[rating_order[5]][1]
+                               & args->boards[player][KING]));
+  kr += (temp * 2);
+  temp = get_piece_num_sboard((ratings[rating_order[5]][2]
+                               & args->boards[player][KING]));
+  kr += (temp * 4);
+  if ((pr * pn_multiplier) < 0) {
+    pr = 0;
+  } else {
+    pr *= pn_multiplier;
+  }
+  if ((nr * pn_multiplier) < 0) {
+    nr = 0;
+  } else {
+    nr *= pn_multiplier;
+  }
+  br *= pos_multiplier;
+  rr *= pos_multiplier;
+  if ((kr * pn_multiplier) < 0) {
+    kr = 0;
+  } else {
+    kr *= pn_multiplier;
+  }
+  qr *= pos_multiplier;
+  return (pr + br + nr + rr + kr + qr);
 }

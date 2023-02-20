@@ -70,7 +70,7 @@ unsigned int get_max_min(int is_max, unsigned int one, unsigned int two) {
 
 unsigned long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
-            unsigned int alpha, unsigned int beta) {
+            unsigned int alpha, unsigned int beta, int turn) {
 //MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
 //MOVE search (s_info *args) {
  stuff++;
@@ -97,6 +97,7 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
   best.to[0] = 0xBAADF00D;
   best.to[1] = 0xBAADF00D;
   best.from[0] = 0xBAADF00D;
+
   best.from[1] = 0xBAADF00D;
   unsigned int current_position[2];
   unsigned int to_position[2];
@@ -127,16 +128,17 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
         uint64_t legals[3];
         get_legal(to_move, ms_bit, i, *args, legals, &player_flags);
         if (depth == 0) {
-          return evaluate(args, to_move, player_flags, enemy_flags);
+          return evaluate(args, to_move, player_flags, enemy_flags, turn);
         } else if ((player_flags & MATE) == 1 || (enemy_flags & MATE) == 1) {
-          current = evaluate(args, to_move, player_flags, enemy_flags);
-          if ((to_move == WHITE && current.score > best.score) ||
-              (to_move == BLACK && current.score < best.score)) {
-            best.score = current.score;
-            best.from[0] = current_position[0];
-            best.from[1] = current_position[1];
-            best.to[0] = to_position[0];
-            best.to[1] = to_position[1];
+          current = evaluate(args, to_move, player_flags, enemy_flags, turn);
+          if ((to_move == WHITE && current.score >= best.score) ||
+              (to_move == BLACK && current.score <= best.score )) {
+              best.score = current.score;
+              best.from[0] = current_position[0];
+              best.from[1] = current_position[1];
+              best.to[0] = to_position[0];
+              best.to[1] = to_position[1];
+              best.rating = current.rating;
           }
         } else {
           for (int k = 0; k < NUM_LEVELS; k++) {
@@ -163,19 +165,39 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
               info.to_move = (!player == WHITE ? WHITE : BLACK);
 
               */
-              current = search(&copy, enemy, depth - 1, alpha, beta);
-              if ((to_move == WHITE && current.score > best.score) ||
-                (to_move == BLACK && current.score < best.score)) {
-                best.score = current.score;
-                best.from[0] = current_position[0];
-                best.from[1] = current_position[1];
-                best.to[0] = to_position[0];
-                best.to[1] = to_position[1];
+              current = search(&copy, enemy, depth - 1, alpha, beta, turn + 1);
+              if ((to_move == WHITE && current.score >= best.score) ||
+                (to_move == BLACK && current.score <= best.score )) {
+                if (current.rating > best.rating) {
+                  best.score = current.score;
+                  best.from[0] = current_position[0];
+                  best.from[1] = current_position[1];
+                  best.to[0] = to_position[0];
+                  best.to[1] = to_position[1];
+                  best.rating = current.rating;
+                } else if (!(player_flags & MATE) || !(enemy_flags & MATE)) {
+                  best.score = current.score;
+                  best.from[0] = current_position[0];
+                  best.from[1] = current_position[1];
+                  best.to[0] = to_position[0];
+                  best.to[1] = to_position[1];
+                  best.rating = current.rating;
+                }
                 if (to_move == WHITE) {
                   // WHITE = 0; BLACK = 1
-                  alpha = get_max_min(!to_move, alpha, best.score);
+                  if (player_flags & MATE) {
+                    alpha = get_max_min(!to_move, alpha, best.score);
+                  } else {
+                    alpha = get_max_min(!to_move, alpha,
+                            ((best.score * 5) + best.rating));
+                  }
                 } else {
-                  beta = get_max_min(!to_move, beta, best.score);
+                  if (player_flags & MATE) {
+                    beta = get_max_min(!to_move, beta,
+                            ((best.score * 5) - best.rating));
+                  } else {
+                    beta = get_max_min(!to_move, beta, best.score);
+                  }
                 }
               }
               if (beta <= alpha) {

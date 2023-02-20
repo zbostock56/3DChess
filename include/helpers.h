@@ -55,6 +55,7 @@ typedef struct move {
   unsigned int from[2];
   unsigned int to[2];
   int score;
+  unsigned int rating;
 } MOVE;
 
 unsigned int log2_lookup(uint64_t);
