@@ -97,7 +97,7 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
   best.to[0] = 0xBAADF00D;
   best.to[1] = 0xBAADF00D;
   best.from[0] = 0xBAADF00D;
-
+  best.rating = 0;
   best.from[1] = 0xBAADF00D;
   unsigned int current_position[2];
   unsigned int to_position[2];
@@ -106,8 +106,8 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
     BREAKS WHEN KING BEING EVALUATED ON BLACK AFTER MOVING TO TOP LEVEL
   */
   get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
-  //for (int i = 5; i > -1; i--) {
-  for (int i = 0; i < PIECE_TYPES; i++) {
+  for (int i = 5; i > -1; i--) {
+  //for (int i = 0; i < PIECE_TYPES; i++) {
     /*
       SELECT PIECE TYPE
     */

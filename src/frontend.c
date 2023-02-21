@@ -2,7 +2,7 @@
 #include <frontend.h>
 extern unsigned long long stuff;
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, unsigned int alpha,
-            unsigned int beta);
+            unsigned int beta, int turn);
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to);
 void printf_bitboards(uint64_t *b) {
@@ -181,18 +181,18 @@ int main() {
   //int game_score = 0;
   BOARD_ARGS game;
   init_pieceboard(game);
-  int piece = 3;
-  //unsigned int from[2] = {0,0};
-  unsigned int from[2] = {1,12};
-  //unsigned int to[2] = {0,0};
-  unsigned int to[2] = {1,20};
-  int turn = 0;
+  int piece = 0;
+  unsigned int from[2] = {0,0};
+  //unsigned int from[2] = {1,12};
+  unsigned int to[2] = {0,0};
+  //unsigned int to[2] = {1,20};
+  int to_move = 1;
   while (1) {
-     if (turn == 0) {
+     if (to_move == 0) {
       print_game(&game);
       TYPE type;
-     // printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
-      //scanf("%d", &piece);
+      printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
+      scanf("%d", &piece);
       if (piece == 0) {
         type = BISHOP;
       } else if (piece == 1) {
@@ -208,8 +208,8 @@ int main() {
       } else {
         return 0;
       }
-      //printf("Enter from level (0 - 2) and position (1 - 64)\n");
-      //scanf("%u %u", &from[0], &from[1]);
+      printf("Enter from level (0 - 2) and position (1 - 64)\n");
+      scanf("%u %u", &from[0], &from[1]);
       if (from[1] > 63) {
         from[1] = 63;
       } else if (from[1] < 0) {
@@ -221,8 +221,8 @@ int main() {
         from[0] = 2;
       }
 
-      //printf("Enter to level (0 - 2) and position (1 - 64)\n");
-      //scanf("%u %u", &to[0], &to[1]);
+      printf("Enter to level (0 - 2) and position (1 - 64)\n");
+      scanf("%u %u", &to[0], &to[1]);
       if (to[1] > 63) {
         to[1] = 63;
       } else if (to[1] < 0) {
@@ -235,12 +235,12 @@ int main() {
       }
       printf("from[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
       make_move(&game, WHITE, type, from, to);
-      turn = 1;
+      to_move = 1;
     } else {
       /*
         To/From: {Level, Bitposition}
       */
-      MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX);
+      MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX, 1);
       //MOVE com_move = search(&game, BLACK, 4);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
@@ -262,9 +262,10 @@ int main() {
         type = KING;
       }
       make_move(&game, BLACK, type, from, to);
-      turn = 0;
+      to_move = 0;
       printf("%llu\n", stuff);
-      return 0;
+      //print_game(&game);
+      //return 0;
     }
   }
 }

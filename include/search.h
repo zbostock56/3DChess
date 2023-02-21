@@ -10,6 +10,7 @@ void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
 void get_legal(SIDE player, unsigned int *pos, TYPE type,
                BOARD_ARGS args, uint64_t *output, uint32_t *flags);
 unsigned int log2_lookup(uint64_t);
+void print_game(BOARD_ARGS *args);
 
 /*
 typedef struct s_info {

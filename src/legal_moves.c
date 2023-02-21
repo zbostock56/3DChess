@@ -1,7 +1,5 @@
 /*
-TODO: Fix Rook Legals (Messing up middle board, could be more)
-      -> Effects Queen
-      King Legals (Messed up middle board, could be more)
+TODO: jump_check_detect not properly eliminating moves from pl
 */
 
 #include <legal_moves.h>
