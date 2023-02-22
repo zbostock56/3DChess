@@ -145,9 +145,9 @@ void print_game(BOARD_ARGS *args) {
     }
   }
   for (int i = 0; i < 3; i++) {
-    if (i == 0) {
+    if (i == 1) {
       printf("\nTOP\n\n");
-    } else if (i == 1) {
+    } else if (i == 0) {
       printf("\nMIDDLE\n\n");
     } else {
       printf("\nBOTTOM\n\n");
@@ -187,6 +187,7 @@ int main() {
   unsigned int to[2] = {0,0};
   //unsigned int to[2] = {1,20};
   int to_move = 1;
+  unsigned int turn = 1;
   while (1) {
      if (to_move == 0) {
       print_game(&game);
@@ -240,7 +241,7 @@ int main() {
       /*
         To/From: {Level, Bitposition}
       */
-      MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX, 1);
+      MOVE com_move = search(&game, BLACK, 5, INT_MIN, INT_MAX, turn);
       //MOVE com_move = search(&game, BLACK, 4);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
@@ -263,9 +264,11 @@ int main() {
       }
       make_move(&game, BLACK, type, from, to);
       to_move = 0;
-      printf("%llu\n", stuff);
+      printf("Positions Searched: %llu\n", stuff);
+      printf("Rating: %u\n", com_move.rating);
       //print_game(&game);
       //return 0;
+      turn++;
     }
   }
 }

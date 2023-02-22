@@ -3,6 +3,7 @@
 MOVE evaluate(BOARD_ARGS *args, SIDE to_move,
               uint32_t p_flags, uint32_t e_flags, unsigned int turn) {
   MOVE move;
+  move.rating = get_weighted_rating(turn, to_move, args);
   if ((p_flags & MATE) && to_move == WHITE) {
     move.score = INT_MIN;
     return move;
@@ -65,7 +66,6 @@ MOVE evaluate(BOARD_ARGS *args, SIDE to_move,
     material_score -= Q_VAL;
   }
   move.score = material_score;
-  move.rating = get_weighted_rating(turn, to_move, args);
   return move;
 }
 
@@ -94,7 +94,8 @@ unsigned int get_piece_num_sboard(uint64_t board) {
 unsigned int get_weighted_rating(unsigned int turn,
                                  SIDE player, BOARD_ARGS *args) {
   unsigned int pos_multiplier = (unsigned int)(0.022 * (turn * turn));
-  int neg_multiplier = (unsigned int)((-0.0001 * (turn * turn * turn)) + 4);
+  int neg_multiplier = (unsigned int)(40/turn);
+  //int neg_multiplier = (unsigned int)(-0.0001 * (turn * turn * turn) + 4);
   if (neg_multiplier <= 1)
     neg_multiplier = 1;
   unsigned int pn_multiplier = (unsigned int) neg_multiplier;
@@ -298,11 +299,7 @@ unsigned int get_weighted_rating(unsigned int turn,
   }
   br *= pos_multiplier;
   rr *= pos_multiplier;
-  if ((kr * pn_multiplier) < 0) {
-    kr = 0;
-  } else {
-    kr *= pn_multiplier;
-  }
+  kr *= pos_multiplier;
   qr *= pos_multiplier;
   return (pr + br + nr + rr + kr + qr);
 }
