@@ -1,6 +1,6 @@
 #include <psuedo_legal_moves.h>
 #include <pthread.h>
-#define MAX_NUM_LEGAL_MOVES (140)
+#define MAX_NUM_LEGAL_MOVES (204)
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, unsigned int alpha,
             unsigned int beta, int turn);
 MOVE evaluate(BOARD_ARGS *args, SIDE to_move, uint32_t p_flags, uint32_t e_flags
