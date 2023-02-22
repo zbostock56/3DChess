@@ -58,6 +58,16 @@ typedef struct move {
   unsigned int rating;
 } MOVE;
 
+typedef struct s_info {
+  BOARD_ARGS *args;
+  SIDE to_move;
+  int depth;
+  int alpha;
+  int beta;
+  unsigned int turn;
+  unsigned int id;
+};
+
 unsigned int log2_lookup(uint64_t);
 void print_bitboard(uint64_t b, FILE *fp);
 void print_bitboards(uint64_t *b, FILE *fp);

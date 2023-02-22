@@ -264,7 +264,7 @@ int main() {
       }
       make_move(&game, BLACK, type, from, to);
       to_move = 0;
-      printf("Positions Searched: %llu\n", stuff);
+      //printf("Positions Searched: %llu\n", stuff);
       printf("Rating: %u\n", com_move.rating);
       //print_game(&game);
       //return 0;

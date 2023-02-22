@@ -15,78 +15,97 @@
      up the tree to be used in choosing the best move
 */
 
-int ms_bit_lookup(uint64_t *input) {
-  int ms_bit_poss = log2_lookup(*input);
-  *input &= ~(ONE << ms_bit_poss);
-  return ms_bit_poss;
-}
 
-void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 3; j++) {
-    dest->boards[i][j] = source->boards[i][j];
-    }
-  }
 
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 6; j++) {
-      for (int k = 0; k < 3; k++) {
-        dest->piece_boards[i][j][k] = source->piece_boards[i][j][k];
+MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
+                       unsigned int depth, int alpha,
+                       int beta, int turn) {
+  SIDE enemy = to_move == WHITE ? BLACK : WHITE;
+  uint32_t enemy_flags = 0;
+  uint32_t player_flags = 0;
+  uint64_t junk[3];
+  unsigned int current_position[2];
+  unsigned int to_position[2];
+  uint64_t legals[3];
+  S_INFO info;
+  BOARD_ARGS copy;
+  int thread_num = -1;
+  get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
+  get_legal(to_move, args->k_pos[to_move], KING, *args, junk, &player_flags);
+  if ((player_flags & MATE) || (enemy_flags & MATE)) {
+    return NULL;
+  } else {
+    for (int i = 5; i > -1; i--) {
+      //for (int i = 0; i < PIECE_TYPES; i++) {
+        /*
+          SELECT PIECE TYPE
+        */
+        for (int j = 0; j < NUM_LEVELS; j++) {
+          /*
+            SELECT LEVEL
+          */
+          current_position[0] = j;
+          /*
+            FIND MOST SIG BIT OF PIECES BOARD, THEN REMOVE FROM BITBOARD
+          */
+          uint64_t t_piece_board = args->piece_boards[to_move][i][j];
+          while (t_piece_board) {
+            unsigned int ms_bit[2] = {j, ms_bit_lookup(&t_piece_board)};
+            current_position[1] = ms_bit[1];
+            current.from[0] = current_position[0];
+            current.from[1] = current_position[1];
+            get_legal(to_move, ms_bit, i, *args, legals, &player_flags);
+            for (int k = 0; k < NUM_LEVELS; k++) {
+            /*
+              SELECT LEGAL MOVE
+            */
+            to_position[0] = k;
+            /*
+              GET SIG BIT FOR LEGAL MOVES BIT BOARD, THEN MAKE ALL MOVES
+            */
+            uint64_t t_legal_board = legals[k];
+            while (t_legal_board) {
+              unsigned int ms_bit_poss_legal[2] = {k, ms_bit_lookup(&t_legal_board)};
+              to_position[1] = ms_bit_poss_legal[1];
+              current.to[0] = to_position[0];
+              current.to[1] = to_position[1];
+              make_temp_copy(args, &copy);
+              make_move(&copy, to_move, i, ms_bit, ms_bit_poss_legal);
+              info->args = &copy;
+              info->to_move = enemy;
+              info->depth = depth - 1;
+              info->alpha = alpha;
+              info->beta = beta;
+              info->turn = turn;
+              thread_num++;
+              info->id = thread_num;
+              pthread_create(&thread[thread_num], NULL,
+                              s_th_wrapper, (void *) info);
+            }
+          }
+        }
       }
     }
   }
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 3; j++) {
-    dest->hv_sliders[i][j] = source->hv_sliders[i][j];
-    }
-  }
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 3; j++) {
-    dest->d_sliders[i][j] = source->d_sliders[i][j];
-    }
-  }
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 2; j++) {
-    dest->k_pos[i][j] = source->k_pos[i][j];
-    }
-  }
+  //pthread_join
+  // FIND BEST MOVE
 }
 
-unsigned int get_max_min(int is_max, unsigned int one, unsigned int two) {
-  if (is_max) {
-    // FINDING FOR WHITE
-    if (one > two)
-      return one;
-    else
-      return two;
-  } else {
-    // FINDING FOR BLACK
-    if (one < two)
-      return one;
-    else
-      return two;
-  }
+void s_th_wrapper(void *arg) {
+  S_INFO *args = (S_INFO *) arg;
+  move_list[args->id] = search(args->args, args->to_move, args->depth,
+                         args->alpha, args->beta, args->turn);
 }
 
-unsigned long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
-            unsigned int alpha, unsigned int beta, int turn) {
+            int alpha, int beta, int turn) {
 //MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
-//MOVE search (s_info *args) {
- stuff++;
- SIDE enemy = to_move == WHITE ? BLACK : WHITE;
+//MOVE search (void *arg) {
+  SIDE enemy = to_move == WHITE ? BLACK : WHITE;
   uint32_t player_flags = 0;
   uint32_t enemy_flags = 0;
   MOVE best;
   MOVE current;
-  /*
-
-  s_info info;
-  pthread_t thread;
-  int thread_return;
-  thread_return = pthread_create(&thread, NULL, search, (void *));
-
-  */
   if (to_move == WHITE) {
     best.score = INT_MIN;
   } else {
@@ -158,13 +177,6 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
               BOARD_ARGS copy;
               make_temp_copy(args, &copy);
               make_move(&copy, to_move, i, ms_bit, ms_bit_poss_legal);
-              /*
-
-              info.args = copy;
-              info.depth = depth - 1;
-              info.to_move = (!player == WHITE ? WHITE : BLACK);
-
-              */
               current = search(&copy, enemy, depth - 1, alpha, beta, turn + 1);
               if ((to_move == WHITE && current.score >= best.score) ||
                 (to_move == BLACK && current.score <= best.score )) {
@@ -270,3 +282,57 @@ void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
     args->piece_boards[enemy_t][KNIGHT][to[0]] ^= new_pos;
   }
 }
+
+int ms_bit_lookup(uint64_t *input) {
+  int ms_bit_poss = log2_lookup(*input);
+  *input &= ~(ONE << ms_bit_poss);
+  return ms_bit_poss;
+}
+
+void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 3; j++) {
+    dest->boards[i][j] = source->boards[i][j];
+    }
+  }
+
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 6; j++) {
+      for (int k = 0; k < 3; k++) {
+        dest->piece_boards[i][j][k] = source->piece_boards[i][j][k];
+      }
+    }
+  }
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 3; j++) {
+    dest->hv_sliders[i][j] = source->hv_sliders[i][j];
+    }
+  }
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 3; j++) {
+    dest->d_sliders[i][j] = source->d_sliders[i][j];
+    }
+  }
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < 2; j++) {
+    dest->k_pos[i][j] = source->k_pos[i][j];
+    }
+  }
+}
+
+int get_max_min(int is_max, int one, int two) {
+  if (is_max) {
+    // FINDING FOR WHITE
+    if (one > two)
+      return one;
+    else
+      return two;
+  } else {
+    // FINDING FOR BLACK
+    if (one < two)
+      return one;
+    else
+      return two;
+  }
+}
+
