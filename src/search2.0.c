@@ -89,8 +89,9 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
               parent_move_list[thread_num].from[0] = current.from[0];
               parent_move_list[thread_num].from[1] = current.from[1];
               parent_move_list[thread_num].args = &copy;
-              pthread_create(&threads[thread_num], NULL,
+              pthread_create(threads + thread_num, NULL,
                               (void *) s_th_wrapper, (void *) &info);
+              //printf("Address of thread %d | %p\n", thread_num, threads + thread_num);
             }
           }
         }
@@ -99,11 +100,17 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   }
   printf("\n\n%d threads spawned\n", thread_num + 1);
   int j = -1;
+
   while (j < thread_num) {
-    //printf("Thread %d joined\n", j);
     j++;
-    pthread_join(threads[thread_num], NULL);
+    int s = pthread_join(threads[j], NULL);
+    if (s != 0) {
+       printf("ERROR DETECTED IN THREAD %d | %d\n", j, s);
+    }
+    printf("Thread %d joined with code %d\n", j, s);
+    //printf("Thread ptr: %p\n", threads + thread_num);
   }
+
   // FIND BEST MOVE
   MOVE best;
   MOVE cur;
@@ -140,8 +147,10 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
         best_index = thread_num;
       }
     }
+    //printf("best num: %d\n", best_index);
     thread_num--;
   }
+
   MOVE b_ret = evaluate(parent_move_list[best_index].args, to_move,
                         player_flags, enemy_flags, turn);
   b_ret.args = parent_move_list[best_index].args;
@@ -150,17 +159,20 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   b_ret.to[0] = parent_move_list[best_index].to[0];
   b_ret.to[1] = parent_move_list[best_index].to[1];
   b_ret.to_move = to_move;
+  //printf("%p\n", b_ret.args);
   //if (total_threads == 1) {
   //  b_ret.args = ;
   //}
 
   return b_ret;
+  //return best;
 }
 
 void s_th_wrapper(void *arg) {
   S_INFO *args = (S_INFO *) arg;
   move_list[args->id] = search(args->args, args->to_move, args->depth,
                          args->alpha, args->beta, args->turn);
+  pthread_exit(0);
 }
 long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,

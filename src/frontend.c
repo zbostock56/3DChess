@@ -244,7 +244,7 @@ int main() {
         To/From: {Level, Bitposition}
       */
       //MOVE com_move = level_zero_search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
-      MOVE com_move = level_zero_search(&game, turn, BLACK, 5, INT_MIN, INT_MAX);
+      MOVE com_move = level_zero_search(&game, turn, BLACK, 4, INT_MIN, INT_MAX);
       //MOVE com_move = search(&game, BLACK, 4);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
@@ -269,8 +269,8 @@ int main() {
       to_move = 0;
       printf("Positions Searched: %llu\n", stuff);
       printf("Rating: %u\n", com_move.rating);
-      //print_game(&game);
-      //return 0;
+      print_game(&game);
+      return 0;
       turn++;
     }
   }
