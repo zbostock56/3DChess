@@ -1,8 +1,8 @@
 #include <psuedo_legal_moves.h>
 #include <pthread.h>
 #define MAX_NUM_LEGAL_MOVES (204)
-MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, unsigned int alpha,
-            unsigned int beta, int turn);
+MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,
+            int beta, unsigned int turn);
 MOVE evaluate(BOARD_ARGS *args, SIDE to_move, uint32_t p_flags, uint32_t e_flags
               , int turn);
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
@@ -15,7 +15,7 @@ int ms_bit_lookup(uint64_t *input);
 void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest);
 int get_max_min(int is_max, int one, int two);
 MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
-                       unsigned int depth, unsigned int alpha);
+                       unsigned int depth, int alpha, int beta);
 void s_th_wrapper(void *arg);
 
 MOVE move_list[MAX_NUM_LEGAL_MOVES];

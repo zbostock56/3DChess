@@ -66,7 +66,7 @@ typedef struct s_info {
   int beta;
   unsigned int turn;
   unsigned int id;
-};
+} S_INFO;
 
 unsigned int log2_lookup(uint64_t);
 void print_bitboard(uint64_t b, FILE *fp);

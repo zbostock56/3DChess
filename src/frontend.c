@@ -1,10 +1,12 @@
 #include <psuedo_legal_moves.h>
 #include <frontend.h>
 extern unsigned long long stuff;
-MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, unsigned int alpha,
-            unsigned int beta, int turn);
+MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,
+            int beta, unsigned int turn);
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to);
+MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
+                       unsigned int depth, int alpha, int beta);
 void printf_bitboards(uint64_t *b) {
   for (int i = 0; i < 3; i++) {
     printf("%s\n", i == 0 ? "TOP" : i == 1 ? "MIDDLE" : "BOTTOM");
@@ -241,7 +243,8 @@ int main() {
       /*
         To/From: {Level, Bitposition}
       */
-      MOVE com_move = search(&game, BLACK, 5, INT_MIN, INT_MAX, turn);
+      //MOVE com_move = level_zero_search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
+      MOVE com_move = level_zero_search(&game, turn, WHITE, 5, INT_MIN, INT_MAX);
       //MOVE com_move = search(&game, BLACK, 4);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
