@@ -40,8 +40,8 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   if ((player_flags & MATE) || (enemy_flags & MATE)) {
     return current;
   } else {
-    for (int i = 5; i > -1; i--) {
-      //for (int i = 0; i < PIECE_TYPES; i++) {
+    //for (int i = 5; i > -1; i--) {
+    for (int i = 0; i < PIECE_TYPES; i++) {
         /*
           SELECT PIECE TYPE
         */
@@ -84,6 +84,11 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
               info.turn = turn;
               thread_num++;
               info.id = thread_num;
+              parent_move_list[thread_num].to[0] = current.to[0];
+              parent_move_list[thread_num].to[1] = current.to[1];
+              parent_move_list[thread_num].from[0] = current.from[0];
+              parent_move_list[thread_num].from[1] = current.from[1];
+              parent_move_list[thread_num].args = &copy;
               pthread_create(&threads[thread_num], NULL,
                               (void *) s_th_wrapper, (void *) &info);
             }
@@ -92,13 +97,12 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
       }
     }
   }
-  printf("Threads %d spawned\n", thread_num);
-  int i = thread_num;
-  int j = 0;
+  printf("\n\n%d threads spawned\n", thread_num + 1);
+  int j = -1;
   while (j < thread_num) {
     //printf("Thread %d joined\n", j);
-    pthread_join(threads[thread_num], NULL);
     j++;
+    pthread_join(threads[thread_num], NULL);
   }
   // FIND BEST MOVE
   MOVE best;
@@ -113,8 +117,9 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   best.from[0] = 0;
   best.from[1] = 0;
   best.rating = 0;
-  while (i > -1) {
-    cur = move_list[i];
+  int best_index = 0;
+  while (thread_num > -1) {
+    cur = move_list[thread_num];
     if ((to_move == WHITE && cur.score >= best.score) ||
        (to_move == BLACK && cur.score <= best.score )) {
       if (cur.score == INT_MIN || cur.score == INT_MAX) {
@@ -124,6 +129,7 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
         best.to[0] = cur.to[0];
         best.to[1] = cur.to[1];
         best.rating = cur.rating;
+        best_index = thread_num;
       } else if (cur.rating > best.rating) {
         best.score = cur.score;
         best.from[0] = cur.from[0];
@@ -131,11 +137,24 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
         best.to[0] = cur.to[0];
         best.to[1] = cur.to[1];
         best.rating = cur.rating;
+        best_index = thread_num;
       }
     }
-    i--;
+    thread_num--;
   }
-  return best;
+  MOVE b_ret = evaluate(parent_move_list[best_index].args, to_move,
+                        player_flags, enemy_flags, turn);
+  b_ret.args = parent_move_list[best_index].args;
+  b_ret.from[0] = parent_move_list[best_index].from[0];
+  b_ret.from[1] = parent_move_list[best_index].from[1];
+  b_ret.to[0] = parent_move_list[best_index].to[0];
+  b_ret.to[1] = parent_move_list[best_index].to[1];
+  b_ret.to_move = to_move;
+  //if (total_threads == 1) {
+  //  b_ret.args = ;
+  //}
+
+  return b_ret;
 }
 
 void s_th_wrapper(void *arg) {
@@ -143,11 +162,12 @@ void s_th_wrapper(void *arg) {
   move_list[args->id] = search(args->args, args->to_move, args->depth,
                          args->alpha, args->beta, args->turn);
 }
-
+long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
             int alpha, int beta, unsigned int turn) {
 //MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
 //MOVE search (void *arg) {
+  stuff++;
   SIDE enemy = to_move == WHITE ? BLACK : WHITE;
   uint32_t player_flags = 0;
   uint32_t enemy_flags = 0;

@@ -244,11 +244,11 @@ int main() {
         To/From: {Level, Bitposition}
       */
       //MOVE com_move = level_zero_search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
-      MOVE com_move = level_zero_search(&game, turn, WHITE, 5, INT_MIN, INT_MAX);
+      MOVE com_move = level_zero_search(&game, turn, BLACK, 5, INT_MIN, INT_MAX);
       //MOVE com_move = search(&game, BLACK, 4);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
-      printf("\n\n\nBLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+      printf("BLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
       printf("COMPUTER EVAL: %d\n", com_move.score);
       uint64_t cur = (ONE << from[1]);
       TYPE type;
@@ -267,7 +267,7 @@ int main() {
       }
       make_move(&game, BLACK, type, from, to);
       to_move = 0;
-      //printf("Positions Searched: %llu\n", stuff);
+      printf("Positions Searched: %llu\n", stuff);
       printf("Rating: %u\n", com_move.rating);
       //print_game(&game);
       //return 0;
