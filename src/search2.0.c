@@ -15,6 +15,22 @@
      up the tree to be used in choosing the best move
 */
 
+void print_moves() {
+  MOVE cur;
+  MOVE parent_cur;
+  for (int i = 0; i < MAX_NUM_LEGAL_MOVES; i++) {
+    cur = move_list[i];
+    parent_cur = parent_move_list[i];
+    if (cur.rating != 0) {
+      printf("INDEX NUMBER: %d\n", i);
+      printf("SEARCH RETURNED MOVE:\nTO MOVE: %d\nFROM[0]: %d\nFROM[1]: %d\nTO[0]: %d\nTO[1]: %d\nSCORE: %d\nRATING: %u\n", cur.to_move,
+        cur.from[0], cur.from[1], cur.to[0], cur.to[1], cur.score, cur.rating);
+      printf("PARENT MOVE:\nTO MOVE: %d\nFROM[0]: %d\nFROM[1]: %d\nTO[0]: %d\nTO[1]: %d\nSCORE: %d\nRATING: %u\n\n", parent_cur.to_move,
+        parent_cur.from[0], parent_cur.from[1], parent_cur.to[0], parent_cur.to[1],
+        parent_cur.score, parent_cur.rating);
+    }
+  }
+}
 
 
 MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
@@ -110,7 +126,8 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
     printf("Thread %d joined with code %d\n", j, s);
     //printf("Thread ptr: %p\n", threads + thread_num);
   }
-
+  printf("\nLISTING ALL MOVES:\n\n");
+  print_moves();
   // FIND BEST MOVE
   MOVE best;
   MOVE cur;
@@ -147,7 +164,7 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
         best_index = thread_num;
       }
     }
-    //printf("best num: %d\n", best_index);
+    printf("MOVE CHOSEN AS BEST: %d\n", best_index);
     thread_num--;
   }
 
@@ -179,7 +196,6 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
             int alpha, int beta, unsigned int turn) {
 //MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
 //MOVE search (void *arg) {
-  stuff++;
   SIDE enemy = to_move == WHITE ? BLACK : WHITE;
   uint32_t player_flags = 0;
   uint32_t enemy_flags = 0;
@@ -256,6 +272,9 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
               BOARD_ARGS copy;
               make_temp_copy(args, &copy);
               make_move(&copy, to_move, i, ms_bit, ms_bit_poss_legal);
+              pthread_mutex_lock(&lock);
+              stuff++;
+              pthread_mutex_unlock(&lock);
               current = search(&copy, enemy, depth - 1, alpha, beta, turn + 1);
               if ((to_move == WHITE && current.score >= best.score) ||
                 (to_move == BLACK && current.score <= best.score )) {

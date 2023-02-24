@@ -21,3 +21,4 @@ void s_th_wrapper(void *arg);
 MOVE move_list[MAX_NUM_LEGAL_MOVES];
 pthread_t threads[MAX_NUM_LEGAL_MOVES];
 MOVE parent_move_list[MAX_NUM_LEGAL_MOVES];
+pthread_mutex_t lock;
