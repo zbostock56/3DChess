@@ -187,8 +187,10 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
 
 void s_th_wrapper(void *arg) {
   S_INFO *args = (S_INFO *) arg;
+  printf("spawning thread with id: %d\n", args->id);
   move_list[args->id] = search(args->args, args->to_move, args->depth,
                          args->alpha, args->beta, args->turn);
+  printf("hit with %d\n", args->id);
   pthread_exit(0);
 }
 long long stuff = 0;

@@ -243,9 +243,9 @@ int main() {
       /*
         To/From: {Level, Bitposition}
       */
-      MOVE com_move = level_zero_search(&game, turn, BLACK, 3, INT_MIN, INT_MAX);
+      MOVE com_move = level_zero_search(&game, turn, BLACK, 4, INT_MIN, INT_MAX);
       //MOVE com_move = search(&game, BLACK, 4);
-      //MOVE com_move = search(&game, BLACK, 2, INT_MIN, INT_MAX, turn);
+      //MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
       printf("BLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
