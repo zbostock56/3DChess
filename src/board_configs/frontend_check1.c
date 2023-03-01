@@ -1,5 +1,5 @@
 #include <psuedo_legal_moves.h>
-#include <frontend.h>
+#include <frontend_check1.h>
 extern unsigned long long stuff;
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,
             int beta, unsigned int turn);

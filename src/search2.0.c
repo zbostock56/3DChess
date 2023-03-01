@@ -300,6 +300,7 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                   best.to[1] = to_position[1];
                   best.rating = current.rating * 10;
                 }
+                /*
                 if (to_move == WHITE) {
                   // WHITE = 0; BLACK = 1
                   if (player_flags & MATE) {
@@ -316,10 +317,13 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                     beta = get_max_min(!to_move, beta, best.score);
                   }
                 }
+                */
               }
+              /*
               if (beta <= alpha) {
                 break;
               }
+              */
             }
           }
         }
