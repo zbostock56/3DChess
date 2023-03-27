@@ -167,7 +167,7 @@ void print_game(BOARD_ARGS *args) {
   printf("\n");
   fflush(stdout);
 }
-
+#if 0
 int main() {
   /*
     LOAD INITIAL BOARD
@@ -276,4 +276,76 @@ int main() {
       turn++;
     }
   }
+}
+#endif
+
+#include <glad/glad.h>
+#include <glfw3.h>
+int main() {
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  GLFWwindow *window = glfwCreateWindow(800, 600, "ZACK IS LAME\n", NULL, NULL);
+  glfwMakeContextCurrent(window);
+
+  gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
+  const char *vs = "\
+  #version 460 core\n\
+  layout (location = 0) in vec3 aPos;\n\
+  void main() {\n\
+    gl_position = vec4(aPos, 1.0);\n\
+  }\n";
+  unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertexShader, 1, &vs, NULL);
+  glCompileShader(vertexShader);
+
+  const char *fs = "\
+  #version 460 core\n\
+  out vec4 FragColor;\n\
+  void main() {\n\
+    FragColor = vec4(1.0, 0.5, 0.2, 1.0);\n\
+  }\n";
+  unsigned int frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(frag_shader, 1, &fs, NULL);
+  glCompileShader(frag_shader);
+
+  unsigned int shader_prog = glCreateProgram();
+  glAttachShader(shader_prog, vertexShader);
+  glAttachShader(shader_prog, frag_shader);
+  glLinkProgram(shader_prog);
+
+  float points[] = {
+  -0.5f, -0.5f, 0.0f,
+  0.5f, -0.5f, 0.0f,
+  0.0f, 0.5f, 0.0f
+  };
+
+  unsigned int VAO, VBO;
+  glGenBuffers(1, &VBO);
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
+
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void *) 0);
+  glEnableVertexAttribArray(0);
+
+  while (!glfwWindowShouldClose(window)) {
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    //glUseProgram(shader_prog);
+    glBindVertexArray(VAO);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+  }
+
+  glfwTerminate();
 }
