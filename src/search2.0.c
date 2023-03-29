@@ -218,12 +218,15 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
   unsigned int current_position[2];
   unsigned int to_position[2];
   uint64_t junk[3];
+  //int order[5] = {3,4,1,2,5};
   /*
     BREAKS WHEN KING BEING EVALUATED ON BLACK AFTER MOVING TO TOP LEVEL
   */
   get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
-  for (int i = 5; i > -1; i--) {
-  //for (int i = 0; i < PIECE_TYPES; i++) {
+  //for (int i = 5; i > -1; i--) {
+  //int i = 0;
+  for (int i = 0; i < PIECE_TYPES; i++) {
+  //u 
     /*
       SELECT PIECE TYPE
     */
@@ -302,7 +305,6 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                   best.to[1] = to_position[1];
                   best.rating = current.rating * 10;
                 }
-                /*
                 if (to_move == WHITE) {
                   // WHITE = 0; BLACK = 1
                   if (player_flags & MATE) {
@@ -319,13 +321,10 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                     beta = get_max_min(!to_move, beta, best.score);
                   }
                 }
-                */
               }
-              /*
               if (beta <= alpha) {
                 break;
               }
-              */
             }
           }
         }
