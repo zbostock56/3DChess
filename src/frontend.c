@@ -3,6 +3,8 @@
 #include <string.h>
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
+#include <entity_str.h>
+
 extern unsigned long long stuff;
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,
             int beta, unsigned int turn);
@@ -171,6 +173,7 @@ void print_game(BOARD_ARGS *args) {
   fflush(stdout);
 }
 
+#if 0
 int main() {
   /*
     LOAD INITIAL BOARD
@@ -360,178 +363,33 @@ int main() {
     }
     }
   }
+#endif
 
-#if 0
-float board[] = {
-9.000000, 0.000000, 9.000000, 0.875000, 0.875000,
-9.000000, 0.000000, 12.000000, 1.000000, 0.875000,
-12.000000, 0.000000, 12.000000, 1.000000, 1.000000,
-12.000000, 0.000000, 9.000000, 0.875000, 1.000000,
-9.000000, 0.000000, -3.000000, 0.375000, 0.875000,
-9.000000, 0.000000, 0.000000, 0.500000, 0.875000,
-12.000000, 0.000000, 0.000000, 0.500000, 1.000000,
-12.000000, 0.000000, -3.000000, 0.375000, 1.000000,
--3.000000, 0.000000, -3.000000, 0.375000, 0.375000,
--3.000000, 0.000000, 0.000000, 0.500000, 0.375000,
-0.000000, 0.000000, 0.000000, 0.500000, 0.500000,
-0.000000, 0.000000, -3.000000, 0.375000, 0.500000,
--3.000000, 0.000000, 9.000000, 0.875000, 0.375000,
--3.000000, 0.000000, 12.000000, 1.000000, 0.375000,
-0.000000, 0.000000, 12.000000, 1.000000, 0.500000,
-0.000000, 0.000000, 9.000000, 0.875000, 0.500000,
--3.000000, 0.000000, 3.000000, 0.625000, 0.375000,
--3.000000, 0.000000, 6.000000, 0.750000, 0.375000,
-0.000000, 0.000000, 6.000000, 0.750000, 0.500000,
-0.000000, 0.000000, 3.000000, 0.625000, 0.500000,
--9.000000, 0.000000, 3.000000, 0.625000, 0.125000,
--9.000000, 0.000000, 6.000000, 0.750000, 0.125000,
--6.000000, 0.000000, 6.000000, 0.750000, 0.250000,
--6.000000, 0.000000, 3.000000, 0.625000, 0.250000,
--9.000000, 0.000000, 9.000000, 0.875000, 0.125000,
--9.000000, 0.000000, 12.000000, 1.000000, 0.125000,
--6.000000, 0.000000, 12.000000, 1.000000, 0.250000,
--6.000000, 0.000000, 9.000000, 0.875000, 0.250000,
--3.000000, 0.000000, -9.000000, 0.125000, 0.375000,
--3.000000, 0.000000, -6.000000, 0.250000, 0.375000,
-0.000000, 0.000000, -6.000000, 0.250000, 0.500000,
-0.000000, 0.000000, -9.000000, 0.125000, 0.500000,
--9.000000, 0.000000, -9.000000, 0.125000, 0.125000,
--9.000000, 0.000000, -6.000000, 0.250000, 0.125000,
--6.000000, 0.000000, -6.000000, 0.250000, 0.250000,
--6.000000, 0.000000, -9.000000, 0.125000, 0.250000,
--9.000000, 0.000000, -3.000000, 0.375000, 0.125000,
--9.000000, 0.000000, 0.000000, 0.500000, 0.125000,
--6.000000, 0.000000, 0.000000, 0.500000, 0.250000,
--6.000000, 0.000000, -3.000000, 0.375000, 0.250000,
-9.000000, 0.000000, -9.000000, 0.125000, 0.875000,
-9.000000, 0.000000, -6.000000, 0.250000, 0.875000,
-12.000000, 0.000000, -6.000000, 0.250000, 1.000000,
-12.000000, 0.000000, -9.000000, 0.125000, 1.000000,
-3.000000, 0.000000, -9.000000, 0.125000, 0.625000,
-3.000000, 0.000000, -6.000000, 0.250000, 0.625000,
-6.000000, 0.000000, -6.000000, 0.250000, 0.750000,
-6.000000, 0.000000, -9.000000, 0.125000, 0.750000,
-3.000000, 0.000000, -3.000000, 0.375000, 0.625000,
-3.000000, 0.000000, 0.000000, 0.500000, 0.625000,
-6.000000, 0.000000, 0.000000, 0.500000, 0.750000,
-6.000000, 0.000000, -3.000000, 0.375000, 0.750000,
-9.000000, 0.000000, 3.000000, 0.625000, 0.875000,
-9.000000, 0.000000, 6.000000, 0.750000, 0.875000,
-12.000000, 0.000000, 6.000000, 0.750000, 1.000000,
-12.000000, 0.000000, 3.000000, 0.625000, 1.000000,
-3.000000, 0.000000, 3.000000, 0.625000, 0.625000,
-3.000000, 0.000000, 6.000000, 0.750000, 0.625000,
-6.000000, 0.000000, 6.000000, 0.750000, 0.750000,
-6.000000, 0.000000, 3.000000, 0.625000, 0.750000,
-3.000000, 0.000000, 9.000000, 0.875000, 0.625000,
-3.000000, 0.000000, 12.000000, 1.000000, 0.625000,
-6.000000, 0.000000, 12.000000, 1.000000, 0.750000,
-6.000000, 0.000000, 9.000000, 0.875000, 0.750000,
-3.000000, 0.000000, -12.000000, 0.000000, 0.625000,
-6.000000, 0.000000, -12.000000, 0.000000, 0.750000,
-0.000000, 0.000000, -12.000000, 0.000000, 0.500000,
-9.000000, 0.000000, -12.000000, 0.000000, 0.875000,
-12.000000, 0.000000, -12.000000, 0.000000, 1.000000,
--12.000000, 0.000000, -6.000000, 0.250000, 0.000000,
--12.000000, 0.000000, -3.000000, 0.375000, 0.000000,
--12.000000, 0.000000, 0.000000, 0.500000, 0.000000,
--9.000000, 0.000000, -12.000000, 0.000000, 0.125000,
--6.000000, 0.000000, -12.000000, 0.000000, 0.250000,
--12.000000, 0.000000, -12.000000, 0.000000, 0.000000,
--12.000000, 0.000000, -9.000000, 0.125000, 0.000000,
--3.000000, 0.000000, -12.000000, 0.000000, 0.375000,
--12.000000, 0.000000, 6.000000, 0.750000, 0.000000,
--12.000000, 0.000000, 9.000000, 0.875000, 0.000000,
--12.000000, 0.000000, 12.000000, 1.000000, 0.000000,
--12.000000, 0.000000, 3.000000, 0.625000, 0.000000
-};
-
-unsigned int indicies[] = {
-1, 0, 3,
-2, 1, 3,
-5, 4, 7,
-6, 5, 7,
-9, 8, 11,
-10, 9, 11,
-13, 12, 15,
-14, 13, 15,
-17, 16, 19,
-18, 17, 19,
-21, 20, 23,
-22, 21, 23,
-25, 24, 27,
-26, 25, 27,
-29, 28, 31,
-30, 29, 31,
-33, 32, 35,
-34, 33, 35,
-37, 36, 39,
-38, 37, 39,
-41, 40, 43,
-42, 41, 43,
-45, 44, 47,
-46, 45, 47,
-49, 48, 51,
-50, 49, 51,
-53, 52, 55,
-54, 53, 55,
-57, 56, 59,
-58, 57, 59,
-61, 60, 63,
-62, 61, 63,
-60, 57, 58,
-63, 60, 58,
-15, 18, 57,
-60, 15, 57,
-14, 15, 60,
-61, 14, 60,
-56, 49, 50,
-59, 56, 50,
-19, 10, 49,
-56, 19, 49,
-18, 19, 56,
-57, 18, 56,
-52, 5, 6,
-55, 52, 6,
-59, 50, 5,
-52, 59, 5,
-58, 59, 52,
-53, 58, 52,
-48, 45, 46,
-51, 48, 46,
-11, 30, 45,
-48, 11, 45,
-10, 11, 48,
-49, 10, 48,
-44, 64, 65,
-47, 44, 65,
-31, 66, 64,
-44, 31, 64,
-30, 31, 44,
-45, 30, 44,
-40, 67, 68,
-43, 40, 68,
-47, 65, 67,
-40, 47, 67,
-46, 47, 40,
-41, 46, 40,
-36, 33, 34,
-39, 36, 34,
-70, 69, 33,
-36, 70, 33,
-71, 70, 36,
-37, 71, 36,
-32, 72, 73,
-35, 32, 73,
-75, 74, 72,
-32, 75, 72,
-69, 75, 32,
-33, 69, 32,
-28, 76, 66
-};
-
+#if 1
 #include <glad/glad.h>
 #include <glfw3.h>
+#define DIR "/home/zbostock/Projects/3DChess"
+
+void keyboard_input(GLFWwindow *window);
+void mouse_input(GLFWwindow *widnow, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void framebuffer_size_callback(GLFWwindow *, int, int);
+
+vec3 col_point = { 0.0, 0.0, 0.0 };
+int enable_gravity;
+
+vec3 cam_front = { 0.0, 0.0, 1.0 };
+vec3 cam_pos = { 0.0, 0.0, 0.0 };
+vec3 cam_up = { 0.0, 1.0, 0.0 };
+float pitch = 0.0;
+float yaw = 0.0;
+int firstMouse = 1;
+
+float deltaTime = 0.0;
+float lastFrame = 0.0;
+double lastX;
+double lastY;
+
 int main() {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -540,121 +398,296 @@ int main() {
 
   GLFWwindow *window = glfwCreateWindow(800, 600, "ZACK IS LAME\n", NULL, NULL);
   glfwMakeContextCurrent(window);
+  glfwSetCursorPosCallback(window, mouse_input);
 
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
-  int success;
-  const char *vs = "\
-  #version 460 core\n\
-  layout (location = 0) in vec3 aPos;\n\
-  uniform mat4 proj;\n\
-  out vec3 col;\n\
-  void main() {\n\
-    mat4 t = mat4(\
-    vec4(1.0, 0.0, 0.0, 0.0),\
-    vec4(0.0, 1.0, 0.0, 0.0),\
-    vec4(0.0, 0.0, 1.0, 0.0),\
-    vec4(0.0, -0.75, -4.0, 1.0)\
-    );\
-    mat4 r = mat4(\
-    vec4(1.0, 0.0, 0.0, 0.0),\
-    vec4(0.0, 0.0, 1.0, 0.0),\
-    vec4(0.0, -1.0, 0.0, 0.0),\
-    vec4(0.0, 0.0, 0.0, 1.0)\
-    );\
-    vec3 c = vec3(0.0, 0.0, 1.0);\n\
-    if (proj[0][0] == 0.0) {\n\
-      c[0] = 1.0;\n\
-    }\n\
-    gl_Position = proj * t * vec4(aPos, 1.0);\n\
-    col = vec3(c);\n\
-  }\n";
-  unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexShader, 1, &vs, NULL);
-  glCompileShader(vertexShader);
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  char info_log[512];
-  if (!success) {
-    glGetShaderInfoLog(vertexShader, 512, NULL, info_log);
-    printf("ERR::VS\n%s\n", info_log);
+  unsigned int shader = init_shader_prog(
+    DIR"/src/shaders/shader.vs",
+    NULL,
+    DIR"/src/shaders/shader.fs"
+  );
+  if (shader == -1) {
+    printf("Shader err\n");
+    glfwTerminate();
+    return -1;
   }
 
-  const char *fs = "\
-  #version 460 core\n\
-  out vec4 FragColor;\n\
-  in vec3 col;\n\
-  void main() {\n\
-    FragColor = vec4(col, 1.0);\n\
-  }\n";
-  unsigned int frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(frag_shader, 1, &fs, NULL);
-  glCompileShader(frag_shader);
-  glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(frag_shader, 512, NULL, info_log);
-    printf("ERR::FS\n%s\n", info_log);
+  MODEL *cube = load_model(
+    DIR"/blender/cube/cube.obj"
+    );
+  if (cube == NULL) {
+    printf("Unable to load model\n");
+    glfwTerminate();
+    return -1;
   }
 
-  unsigned int shader_prog = glCreateProgram();
-  glAttachShader(shader_prog, vertexShader);
-  glAttachShader(shader_prog, frag_shader);
-  glLinkProgram(shader_prog);
-  glGetShaderiv(shader_prog, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(shader_prog, 512, NULL, info_log);
-    printf("ERR::PROG\n%s\n", info_log);
+  MODEL *king = load_model(
+    DIR"/blender/king/king.obj"
+    );
+  if (king == NULL) {
+    printf("Unable to king model\n");
+    glfwTerminate();
+    return -1;
   }
 
-  /*float points[] = {
-  -0.5f, -0.5f, -1.0f,
-  0.5f, -0.5f, -1.0f,
-  0.0f, 0.5f, -1.0f
-  };*/
+  MODEL *queen = load_model(
+    DIR"/blender/queen/queen.obj"
+    );
+  if (queen == NULL) {
+    printf("Unable to queen model\n");
+    glfwTerminate();
+    return -1;
+  }
 
-  unsigned int VAO, VBO, EBO;
-  glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
+  MODEL *bishop = load_model(
+    DIR"/blender/bishop/bishop.obj"
+    );
+  if (bishop == NULL) {
+    printf("Unable to bishop model\n");
+    glfwTerminate();
+    return -1;
+  }
 
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(board), board, GL_STATIC_DRAW);
-  //glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+  MODEL *knight = load_model(
+    DIR"/blender/knight/knight.obj"
+    );
+  if (knight == NULL) {
+    printf("Unable to knight model\n");
+    glfwTerminate();
+    return -1;
+  }
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
+  MODEL *rook = load_model(
+    DIR"/blender/rook/rook.obj"
+    );
+  if (rook == NULL) {
+    printf("Unable to rook model\n");
+    glfwTerminate();
+    return -1;
+  }
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void *) 0);
-  //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void *) 0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void *) (sizeof(float) * 3));
-  glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
+  MODEL *pawn = load_model(
+    DIR"/blender/pawn/pawn.obj"
+    );
+  if (pawn == NULL) {
+    printf("Unable to pawn model\n");
+    glfwTerminate();
+    return -1;
+  }
 
+  MODEL *board = load_model(
+    DIR"/blender/board/chess_board.obj");
+
+  vec3 piece_scale = { 0.1, 0.1, 0.1 };
+  ENTITY *board_ent = init_entity(board);
+  vec3 board_pos = { -1.05, 0.0, -1.05 };
+  glm_vec3_copy(piece_scale, board_ent->scale);
+  glm_vec3_copy(board_pos, board_ent->translation);
+
+  ENTITY *king_ent = init_entity(king);
+  vec3 king_pos = { 0.0, 0.0, -0.9 };
+  glm_vec3_copy(king_pos, king_ent->translation);
+  glm_vec3_copy(piece_scale, king_ent->scale);
+
+  ENTITY *queen_ent = init_entity(queen);
+  vec3 queen_pos = { 0.0, 0.0, -1.2 };
+  glm_vec3_copy(queen_pos, queen_ent->translation);
+  glm_vec3_copy(piece_scale, queen_ent->scale);
+
+  ENTITY *bishop_ent = init_entity(bishop);
+  vec3 bishop_pos = { 0.0, 0.0, -0.6 };
+  glm_vec3_copy(bishop_pos, bishop_ent->translation);
+  glm_vec3_copy(piece_scale, bishop_ent->scale);
+
+  ENTITY *bishop2_ent = init_entity(bishop);
+  vec3 bishop2_pos = { 0.0, 0.0, -1.5 };
+  glm_vec3_copy(bishop2_pos, bishop2_ent->translation);
+  glm_vec3_copy(piece_scale, bishop2_ent->scale);
+
+  ENTITY *rook_ent = init_entity(rook);
+  vec3 rook_pos = { 0.0, 0.0, 0.0 };
+  glm_vec3_copy(rook_pos, rook_ent->translation);
+  glm_vec3_copy(piece_scale, rook_ent->scale);
+
+  ENTITY *rook2_ent = init_entity(rook);
+  vec3 rook2_pos = { 0.0, 0.0, -2.1 };
+  glm_vec3_copy(rook2_pos, rook2_ent->translation);
+  glm_vec3_copy(piece_scale, rook2_ent->scale);
+
+  ENTITY *knight_ent = init_entity(knight);
+  vec3 knight_pos = { 0.0, 0.0, -0.3 };
+  glm_vec3_copy(knight_pos, knight_ent->translation);
+  glm_vec3_copy(piece_scale, knight_ent->scale);
+
+  ENTITY *knight2_ent = init_entity(knight);
+  vec3 knight2_pos = { 0.0, 0.0, -1.8 };
+  glm_vec3_copy(knight2_pos, knight2_ent->translation);
+  glm_vec3_copy(piece_scale, knight2_ent->scale);
+
+  ENTITY *p1_ent = init_entity(pawn);
+  vec3 p1_pos = { -0.3, 0.0, 0.0 };
+  glm_vec3_copy(p1_pos, p1_ent->translation);
+  glm_vec3_copy(piece_scale, p1_ent->scale);
+
+  ENTITY *p2_ent = init_entity(pawn);
+  vec3 p2_pos = { -0.3, 0.0, -0.3 };
+  glm_vec3_copy(p2_pos, p2_ent->translation);
+  glm_vec3_copy(piece_scale, p2_ent->scale);
+
+  ENTITY *p3_ent = init_entity(pawn);
+  vec3 p3_pos = { -0.3, 0.0, -0.6 };
+  glm_vec3_copy(p3_pos, p3_ent->translation);
+  glm_vec3_copy(piece_scale, p3_ent->scale);
+
+  ENTITY *p4_ent = init_entity(pawn);
+  vec3 p4_pos = { -0.3, 0.0, -0.9 };
+  glm_vec3_copy(p4_pos, p4_ent->translation);
+  glm_vec3_copy(piece_scale, p4_ent->scale);
+
+  ENTITY *p5_ent = init_entity(pawn);
+  vec3 p5_pos = { -0.3, 0.0, -1.2 };
+  glm_vec3_copy(p5_pos, p5_ent->translation);
+  glm_vec3_copy(piece_scale, p5_ent->scale);
+
+  ENTITY *p6_ent = init_entity(pawn);
+  vec3 p6_pos = { -0.3, 0.0, -1.5 };
+  glm_vec3_copy(p6_pos, p6_ent->translation);
+  glm_vec3_copy(piece_scale, p6_ent->scale);
+
+  ENTITY *p7_ent = init_entity(pawn);
+  vec3 p7_pos = { -0.3, 0.0, -1.8 };
+  glm_vec3_copy(p7_pos, p7_ent->translation);
+  glm_vec3_copy(piece_scale, p7_ent->scale);
+
+  ENTITY *p8_ent = init_entity(pawn);
+  vec3 p8_pos = { -0.3, 0.0, -2.1 };
+  glm_vec3_copy(p8_pos, p8_ent->translation);
+  glm_vec3_copy(piece_scale, p8_ent->scale);
+
+  mat4 model = GLM_MAT4_IDENTITY_INIT;
+  mat4 view = GLM_MAT4_IDENTITY_INIT;
   mat4 proj;
   glm_perspective(glm_rad(45.0), 800.0/600.0, 0.1, 100.0, proj);
-  printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
+  /*printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
          proj[0][0], proj[0][1], proj[0][2], proj[0][3],
          proj[1][0], proj[1][1], proj[1][2], proj[1][3],
          proj[2][0], proj[2][1], proj[2][2], proj[2][3],
-         proj[3][0], proj[3][1], proj[3][2], proj[3][3]);
-  glUseProgram(shader_prog);
-  glUniformMatrix4fv(glGetUniformLocation(shader_prog, "proj"), 1, GL_FALSE, (float *) proj);
+         proj[3][0], proj[3][1], proj[3][2], proj[3][3]);*/
+  glUseProgram(shader);
+  printf("proj: %d\n", glGetUniformLocation(shader, "projection"));
+  printf("view: %d\n", glGetUniformLocation(shader, "view"));
+  printf("model: %d\n", glGetUniformLocation(shader, "model"));
+  fflush(stdout);
+  glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1,
+                     GL_FALSE, (float *) proj);
 
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   while (!glfwWindowShouldClose(window)) {
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    float curFrame = glfwGetTime();
+    deltaTime = curFrame - lastFrame;
+    lastFrame = curFrame;
+
+    keyboard_input(window);
+
+    glClearColor(1.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shader_prog);
-    glBindVertexArray(VAO);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    glDrawElements(GL_TRIANGLES, sizeof(indicies) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    glUseProgram(shader);
+
+    glm_look(cam_pos, cam_front, cam_up, view);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1,
+                       GL_FALSE, (float *) view);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1,
+                       GL_FALSE, (float *) model);
+    draw_entity(shader, board_ent);
+    draw_entity(shader, king_ent);
+    draw_entity(shader, queen_ent);
+    draw_entity(shader, bishop_ent);
+    draw_entity(shader, bishop2_ent);
+    draw_entity(shader, rook_ent);
+    draw_entity(shader, rook2_ent);
+    draw_entity(shader, knight_ent);
+    draw_entity(shader, knight2_ent);
+    draw_entity(shader, p1_ent);
+    draw_entity(shader, p2_ent);
+    draw_entity(shader, p3_ent);
+    draw_entity(shader, p4_ent);
+    draw_entity(shader, p5_ent);
+    draw_entity(shader, p6_ent);
+    draw_entity(shader, p7_ent);
+    draw_entity(shader, p8_ent);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
   glfwTerminate();
-
 }
+
+void keyboard_input(GLFWwindow *window) {
+  float cam_speed = 0.5 * deltaTime;
+  vec3 movement = GLM_VEC3_ZERO_INIT;
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    glm_vec3_scale_as(cam_front, cam_speed, movement);
+    glm_vec3_add(movement, cam_pos, cam_pos);
+  }
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    glm_vec3_scale_as(cam_front, -cam_speed, movement);
+    glm_vec3_add(movement, cam_pos, cam_pos);
+  }
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    glm_vec3_cross(cam_front, cam_up, movement);
+    glm_vec3_scale_as(movement, cam_speed, movement);
+    glm_vec3_add(movement, cam_pos, cam_pos);
+  }
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    glm_vec3_cross(cam_front, cam_up, movement);
+    glm_vec3_scale_as(movement, -cam_speed, movement);
+    glm_vec3_add(movement, cam_pos, cam_pos);
+  }
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, 1);
+  }
+}
+
+void mouse_input(GLFWwindow *window, double xpos, double ypos) {
+  if (firstMouse) {
+    lastX = xpos;
+    lastY = ypos;
+    firstMouse = 0;
+  }
+
+  float xOffset = xpos -lastX;
+  float yOffset = lastY - ypos;
+
+  lastX = xpos;
+  lastY = ypos;
+
+  const float sensitivity = 0.1f;
+  xOffset *= sensitivity;
+  yOffset *= sensitivity;
+
+  yaw += xOffset;
+  pitch += yOffset;
+
+  if (pitch > 89.0f) {
+    pitch = 89.0f;
+  } else if (pitch < -89.0f) {
+    pitch = -89.0f;
+  }
+
+  cam_front[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch));
+  cam_front[1] = sin(glm_rad(pitch));
+  cam_front[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch));
+  glm_vec3_normalize(cam_front);
+
+  vec3 world_up = { 0.0, 1.0, 0.0 };
+  glm_vec3_cross(cam_front, world_up, cam_up);
+  glm_vec3_cross(cam_up, cam_front, cam_up);
+  glm_vec3_normalize(cam_front);
+}
+
 #endif
