@@ -1,15 +1,17 @@
 #include <psuedo_legal_moves.h>
 #include <frontend.h>
+#include <graphics_board_helpers.h>
 
 // GRAPHICS MECHANICS
 vec3 col_point = { 0.0, 0.0, 0.0 };
 int enable_gravity;
 
-vec3 cam_front = { 0.0, 0.0, 1.0 };
-vec3 cam_pos = { 0.0, 0.0, 0.0 };
+vec3 cam_front = { -0.72, -0.68, 0.0 };
+// {forward/back, up/down, left/right}
+vec3 cam_pos = { 1.3, 2.35, -1.0 };
 vec3 cam_up = { 0.0, 1.0, 0.0 };
-float pitch = 0.0;
-float yaw = 0.0;
+float pitch = -45.0;
+float yaw = -180.0;
 int firstMouse = 1;
 
 float deltaTime = 0.0;
@@ -25,17 +27,258 @@ BOARD_ARGS game;
 int piece = 0;
 unsigned int from[2] = {0,0};
 unsigned int to[2] = {0,0};
-int to_move = 0;
+int to_move = 0; // WHITE == 0   BLACK == 1
 pthread_t g;
 int change_ready = 0;
 int turn = 0;
+vec3 g_new_pos = {0.0, 0.0, 0.0};
+int piece_to_move = 0;
+int piece_taken = 0;
+int white_pieces = 16;
+int black_pieces = 16;
+int moved = 0;
+
+/*
+  ORDER:
+  King
+  Queen
+  Left Bishop
+  Right Bishop
+  Left Rook
+  Right Rook
+  Left Knight
+  Right Knight
+  Pawns from left to right
+*/
+
+int game_board[3][64] = {
+{
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+},
+{
+5,8,3,1,2,4,7,6, // WHITE
+9,10,11,12,13,14,15,16,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+25,26,27,28,29,30,31,32,
+21,23,19,17,18,20,24,22  // BLACK
+},
+{
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0
+}
+};
+
+// Helper Functions
+
+void set_game_to_graphics(unsigned int *from, unsigned int *to) {
+  if (to_move == 0) {
+    moved = 0;
+  } else {
+    moved = 1;
+  }
+  int temp = game_board[from[0]][from[1]];
+  piece_to_move = temp;
+  piece_to_move--; // OFFSET PIECE NUMBER FOR ARRAY INDEXING
+  if (to_move == 1) {
+    // BLACK IS MOVING, SUBTRACT BY 16 FOR CORRECT OFFSET
+    piece_to_move--;
+  }
+  game_board[from[0]][from[1]] = 0;
+  if (game_board[to[0]][to[1]] != 0) {
+    piece_taken = game_board[to[0]][to[1]];
+  }
+  game_board[to[0]][to[1]] = temp;
+  // {forward/back, up/down, left/right}
+  glm_vec3_copy(graphics_lookup[to[0]][to[1]], g_new_pos);
+  fprintf(stderr, "\n***** g_new_pos: %f | %f | %f ******\n\n", g_new_pos[0], g_new_pos[1], g_new_pos[2]);
+  change_ready = 1;
+}
+
+void printf_bitboards(uint64_t *b) {
+  for (int i = 0; i < 3; i++) {
+    printf("%s\n", i == 0 ? "TOP" : i == 1 ? "MIDDLE" : "BOTTOM");
+    printf_bitboard(b[i]);
+  }
+}
+
+void print_bitboards(uint64_t *b, FILE *fp) {
+  for (int i = 0; i < 3; i++) {
+    print_bitboard(b[i], fp);
+  }
+}
+
+void print_bitboard(uint64_t b, FILE *fp) {
+  fprintf(fp, "%ld:\n", b);
+  for (int i = 63; i >= 0; i--) {
+    if (b & (ONE << i)) {
+      fprintf(fp, "1 ");
+    } else {
+      fprintf(fp, "0 ");
+    }
+    if (i % 8 == 0) {
+      fprintf(fp, "\n");
+    }
+  }
+  fprintf(fp, "\n");
+}
+
+void printf_bitboard(uint64_t b) {
+  printf("%ld:\n", b);
+  for (int i = 63; i >= 0; i--) {
+    if (b & (ONE << i)) {
+      printf("1 ");
+    } else {
+      printf("0 ");
+    }
+    if (i % 8 == 0) {
+      printf("\n");
+    }
+  }
+  printf("\n");
+}
+
+void print_boards(BOARD_ARGS game) {
+   if (game.boards[BLACK][0]) {
+     printf("-------------BLACK TOP-----------------\n");
+     printf_bitboard(game.boards[BLACK][0]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[BLACK][1]) {
+     printf("-------------BLACK MIDDLE--------------\n");
+     printf_bitboard(game.boards[BLACK][1]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[BLACK][2]) {
+     printf("-------------BLACK BOTTOM--------------\n");
+     printf_bitboard(game.boards[BLACK][2]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][0]) {
+     printf("-------------WHITE TOP-----------------\n");
+     printf_bitboard(game.boards[WHITE][0]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][1]) {
+     printf("-------------WHITE MIDDLE--------------\n");
+     printf_bitboard(game.boards[WHITE][1]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][2]) {
+     printf("-------------WHITE BOTTOM--------------\n");
+     printf_bitboard(game.boards[WHITE][2]);
+     printf("---------------------------------------\n");
+   }
+}
+
+void print_game(BOARD_ARGS *args) {
+  char output[3][8][8] =
+  {{{'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'}},
+  {{'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'}},
+  {{'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'}}};
+  uint64_t x = 0;
+  int m = -1;
+  char out = ' ';
+  // Color
+  for (int i = 0; i < 2; i++) {
+    // Type
+    for (int j = 0; j < 6; j++) {
+      // Level
+      for (int k = 0; k < 3; k++) {
+        x = args->piece_boards[i][j][k];
+        m = log2_lookup(x);
+        while (x != 0) {
+          if (j == PAWN) {
+            out = 'p';
+          } else if (j == KNIGHT) {
+            out = 'n';
+          } else if (j == BISHOP) {
+            out = 'b';
+          } else if (j == ROOK) {
+            out = 'r';
+          } else if (j == QUEEN) {
+            out = 'q';
+          } else if (j == KING) {
+            out = 'k';
+          }
+          if (i == WHITE) {
+            out = toupper(out);
+          }
+          // Division = x, Modulo = y
+          output[k][m / 8][m % 8] = out;
+          x ^= (ONE << m);
+          m = log2_lookup(x);
+        }
+      }
+    }
+  }
+  for (int i = 0; i < 3; i++) {
+    if (i == 0) {
+      printf("\nTOP\n\n");
+    } else if (i == 1) {
+      printf("\nMIDDLE\n\n");
+    } else {
+      printf("\nBOTTOM\n\n");
+    }
+    for (int j = 7; j > -1; j--) {
+      printf("%d | ", j + 1);
+      for (int k = 7; k > -1; k--) {
+        printf("%c", output[i][j][k]);
+        printf(" ");
+      }
+      printf("\n");
+    }
+   printf("----------------------\n    A B C D E F G H\n");
+  }
+  printf("\n");
+  fflush(stdout);
+}
 
 void play() {
   while (1) {
     if (to_move == 0) {
+      unsigned int to[2] = {0, 0};
+      unsigned int from[2] = {0, 0};
       print_game(&game);
       TYPE type;
-      printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
+      printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n"
+      "3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
       scanf("%d", &piece);
       if (piece == 0) {
         type = BISHOP;
@@ -75,17 +318,20 @@ void play() {
       } else if (to[0] > 2) {
         to[0] = 2;
       }
-      printf("from[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+
+      printf("from[0] %u\nfrom[1] %u\nto[0]"
+      " %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
       make_move(&game, WHITE, type, from, to);
+      // MOVE PIECE ON GAME BOARD FOR GRAPHICS RENDERING
+      set_game_to_graphics(from, to);
       to_move = 1;
-      change_ready = 1;
     } else {
       //MOVE com_move = level_zero_search(&game, turn, BLACK, 4, INT_MIN, INT_MAX);
-      //MOVE com_move = search(&game, BLACK, 4);
       MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
-      printf("BLACK'S MOVE\nfrom[0] %u\nfrom[1] %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+      printf("BLACK'S MOVE\nfrom[0] %u\nfrom[1]"
+      " %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
       printf("COMPUTER EVAL: %d\n", com_move.score);
       uint64_t cur = (ONE << from[1]);
       TYPE type;
@@ -102,21 +348,22 @@ void play() {
       } else {
         type = KING;
       }
-      make_move(&game, BLACK, type, from, to);
+
       to_move = 0;
       printf("Positions Searched: %llu\n", stuff);
       stuff = 0;
       //printf("Rating: %u\n", com_move.rating);
+      make_move(&game, BLACK, type, from, to);
       print_game(&game);
-      //return 0;
       turn++;
-      change_ready = 0;
+
+      // MOVE PIECE ON GAME BOARD FOR GRAPHICS RENDERING
+      set_game_to_graphics(from, to);
     }
   }
 }
 
 int main() {
-  init_pieceboard(game);
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -149,7 +396,6 @@ int main() {
     glfwTerminate();
     return -1;
   }
-
 
   MODEL *cube = load_model(
     DIR"/blender/cube/cube.obj"
@@ -267,22 +513,22 @@ int main() {
   };
 
   vec3 w_pos[16] = {
-    { 0.0, 0.0, -0.9 }, // KING
-    { 0.0, 0.0, -1.2 }, // QUEEN
-    { 0.0, 0.0, -0.6 }, // BISHOP
+    { 0.0, 0.0, -1.2 }, // KING
+    { 0.0, 0.0, -0.9 }, // QUEEN
     { 0.0, 0.0, -1.5 }, // BISHOP
-    { 0.0, 0.0, 0.0 }, // ROOK
+    { 0.0, 0.0, -0.6 }, // BISHOP
     { 0.0, 0.0, -2.1 }, // ROOK
+    { 0.0, 0.0, 0.0 }, // ROOK
     { 0.0, 0.0, -0.3 }, // KNIGHT
     { 0.0, 0.0, -1.8 }, // KNIGHT
-    { -0.3, 0.0, 0.0 }, // PAWN
-    { -0.3, 0.0, -0.3 },
-    { -0.3, 0.0, -0.6 },
-    { -0.3, 0.0, -0.9 },
-    { -0.3, 0.0, -1.2 },
-    { -0.3, 0.0, -1.5 },
+    { -0.3, 0.0, -2.1 }, // PAWN
     { -0.3, 0.0, -1.8 },
-    { -0.3, 0.0, -2.1 },
+    { -0.3, 0.0, -1.5 },
+    { -0.3, 0.0, -1.2 },
+    { -0.3, 0.0, -0.9 },
+    { -0.3, 0.0, -0.6 },
+    { -0.3, 0.0, -0.3 },
+    { -0.3, 0.0, 0.0 },
   };
 
   for (int i = 0; i < 16; i++) {
@@ -321,14 +567,22 @@ int main() {
     { -2.1, 0.0, -2.1 }, // ROOK
     { -2.1, 0.0, -0.3 }, // KNIGHT
     { -2.1, 0.0, -1.8 }, // KNIGHT
-    { -1.8, 0.0, 0.0 }, // PAWN
-    { -1.8, 0.0, -0.3 },
-    { -1.8, 0.0, -0.6 },
-    { -1.8, 0.0, -0.9 },
-    { -1.8, 0.0, -1.2 },
-    { -1.8, 0.0, -1.5 },
+    { -1.8, 0.0, -2.1 }, // PAWN
     { -1.8, 0.0, -1.8 },
-    { -1.8, 0.0, -2.1 },
+    { -1.8, 0.0, -1.5 },
+    { -1.8, 0.0, -1.2 },
+    { -1.8, 0.0, -0.9 },
+    { -1.8, 0.0, -0.6 },
+    { -1.8, 0.0, -0.3 },
+    { -1.8, 0.0, 0.0 },
+  };
+
+  int is_drawn_b[16] = {
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+  };
+
+  int is_drawn_w[16] = {
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
   };
 
   for (int i = 0; i < 16; i++) {
@@ -338,7 +592,6 @@ int main() {
     }
     glm_vec3_copy(b_pos[i], black[i]->translation);
   }
-
 
   mat4 view = GLM_MAT4_IDENTITY_INIT;
   mat4 proj;
@@ -357,12 +610,38 @@ int main() {
                      GL_FALSE, (float *) proj);
 
   glEnable(GL_DEPTH_TEST);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+  // START GAME THREAD
+  init_pieceboard(game);
+  pthread_create(&g, NULL, (void *)(&play), NULL);
+
   while (!glfwWindowShouldClose(window)) {
-    /*
+  //fprintf(stderr, "%f %f %f\n%f %f %f\npitch: %f\nyaw: %f\n", cam_pos[0], cam_pos[1], cam_pos[2], cam_front[0], cam_front[1], cam_front[2], pitch, yaw);
     if (change_ready == 1) {
       change_ready = 0;
-      
-    }*/
+      if (moved == 0) {
+        // WHITE PIECE IS MOVING
+        glm_vec3_copy(g_new_pos, w_pos[piece_to_move]);
+        if (piece_taken != 0) {
+          // BLACK PIECE HAS BEEN TAKEN
+          piece_taken -= 16;
+          piece_taken--;
+          is_drawn_b[piece_taken] = 0;
+          piece_taken = 0;
+        }
+      } else {
+        // BLACK PIECE IS MOVING
+        glm_vec3_copy(g_new_pos, b_pos[piece_to_move]);
+        if (piece_taken != 0) {
+          // WHITE PIECE HAS BEEN TAKEN
+          piece_taken--;
+          is_drawn_w[piece_taken] = 0;
+          piece_taken = 0;
+        }
+      }
+    }
+
     float curFrame = glfwGetTime();
     deltaTime = curFrame - lastFrame;
     lastFrame = curFrame;
@@ -372,7 +651,6 @@ int main() {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glUseProgram(board_shader);
     glUniformMatrix4fv(glGetUniformLocation(board_shader, "view"), 1,
@@ -391,6 +669,7 @@ int main() {
     glUniformMatrix4fv(glGetUniformLocation(piece_shader, "view"), 1,
                        GL_FALSE, (float *) view);
 
+    // WHITE ATTRIBUTES
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 0.0, 0.75, 1.0);
     for (int i = 0; i < 16; i++) {
@@ -400,14 +679,18 @@ int main() {
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 1.0, 1.0, 1.0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     for (int i = 0; i < 16; i++) {
-      if (i < 8) {
-        glm_vec3_copy(piece_scale, white[i]->scale);
-      } else {
-        glm_vec3_copy(pawn_scale, white[i]->scale);
+      if (is_drawn_w[i]) {
+        if (i < 8) {
+          glm_vec3_copy(piece_scale, white[i]->scale);
+        } else {
+          glm_vec3_copy(pawn_scale, white[i]->scale);
+        }
+        glm_vec3_copy(w_pos[i], white[i]->translation);
+        draw_entity(piece_shader, white[i]);
       }
-      draw_entity(piece_shader, white[i]);
     }
 
+    // BLACK ATTRIBUTES
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 1.0, 119.0/255.0, 0.0);
     for (int i = 0; i < 16; i++) {
@@ -417,12 +700,15 @@ int main() {
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 0.0, 0.0, 0.0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     for (int i = 0; i < 16; i++) {
-      if (i < 8) {
-        glm_vec3_copy(piece_scale, black[i]->scale);
-      } else {
-        glm_vec3_copy(pawn_scale, black[i]->scale);
+      if (is_drawn_b[i]) {
+        if (i < 8) {
+          glm_vec3_copy(piece_scale, black[i]->scale);
+        } else {
+          glm_vec3_copy(pawn_scale, black[i]->scale);
+        }
+        glm_vec3_copy(b_pos[i], black[i]->translation);
+        draw_entity(piece_shader, black[i]);
       }
-      draw_entity(piece_shader, black[i]);
     }
 
     glfwSwapBuffers(window);
@@ -453,9 +739,96 @@ void keyboard_input(GLFWwindow *window) {
     glm_vec3_scale_as(movement, -cam_speed, movement);
     glm_vec3_add(movement, cam_pos, cam_pos);
   }
+  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  }
+  if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  }
+  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    vec3 temp = {0.0, cam_speed, 0.0};
+    glm_vec3_add(temp, cam_pos, cam_pos);
+  }
+  if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+    vec3 temp = {0.0, cam_speed, 0.0};
+    glm_vec3_sub(cam_pos, temp, cam_pos);
+  }
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, 1);
   }
+
+   // KEY CAMERA CONTROL
+   // LOOK UP
+  if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
+    pitch += cam_speed * 50.0;
+
+    if (pitch > 89.0f) {
+      pitch = 89.0f;
+    } else if (pitch < -89.0f) {
+      pitch = -89.0f;
+    }
+
+    cam_front[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch));
+    cam_front[1] = sin(glm_rad(pitch));
+    cam_front[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch));
+    glm_vec3_normalize(cam_front);
+
+    vec3 world_up = { 0.0, 1.0, 0.0 };
+    glm_vec3_cross(cam_front, world_up, cam_up);
+    glm_vec3_cross(cam_up, cam_front, cam_up);
+    glm_vec3_normalize(cam_front);
+  }
+  // LOOK DOWN
+  if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
+    pitch -= cam_speed * 50.0;
+
+    if (pitch > 89.0f) {
+      pitch = 89.0f;
+    } else if (pitch < -89.0f) {
+      pitch = -89.0f;
+    }
+
+    cam_front[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch));
+    cam_front[1] = sin(glm_rad(pitch));
+    cam_front[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch));
+    glm_vec3_normalize(cam_front);
+
+    vec3 world_up = { 0.0, 1.0, 0.0 };
+    glm_vec3_cross(cam_front, world_up, cam_up);
+    glm_vec3_cross(cam_up, cam_front, cam_up);
+    glm_vec3_normalize(cam_front);
+  }
+  // LOOK LEFT
+  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+    yaw -= cam_speed * 50.0;
+
+    cam_front[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch));
+    cam_front[1] = sin(glm_rad(pitch));
+    cam_front[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch));
+    glm_vec3_normalize(cam_front);
+
+    vec3 world_up = { 0.0, 1.0, 0.0 };
+    glm_vec3_cross(cam_front, world_up, cam_up);
+    glm_vec3_cross(cam_up, cam_front, cam_up);
+    glm_vec3_normalize(cam_front);
+  }
+  // LOOK RIGHT
+  if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
+    yaw += cam_speed * 50.0;
+
+    cam_front[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch));
+    cam_front[1] = sin(glm_rad(pitch));
+    cam_front[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch));
+    glm_vec3_normalize(cam_front);
+
+    vec3 world_up = { 0.0, 1.0, 0.0 };
+    glm_vec3_cross(cam_front, world_up, cam_up);
+    glm_vec3_cross(cam_up, cam_front, cam_up);
+    glm_vec3_normalize(cam_front);
+  }
+
+
+
   if ((glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) && (pressed == 0)) {
     if (active_board == 0) {
       active_board = 2;

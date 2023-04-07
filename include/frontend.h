@@ -202,179 +202,18 @@
 
 extern unsigned long long stuff;
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,
-            int beta, unsigned int turn);
+  int beta, unsigned int turn);
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
-                     unsigned int *from, unsigned int *to);
+  unsigned int *from, unsigned int *to);
 MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
-                       unsigned int depth, int alpha, int beta);
+  unsigned int depth, int alpha, int beta);
 void play();
+void set_game_to_graphics(unsigned int *from, unsigned int *to);
+
 // Graphics Functions
 
 void mouse_input(GLFWwindow *widnow, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void framebuffer_size_callback(GLFWwindow *, int, int);
 void keyboard_input(GLFWwindow *window);
-
-// Helper Functions
-
-void printf_bitboards(uint64_t *b) {
-  for (int i = 0; i < 3; i++) {
-    printf("%s\n", i == 0 ? "TOP" : i == 1 ? "MIDDLE" : "BOTTOM");
-    printf_bitboard(b[i]);
-  }
-}
-
-void print_bitboards(uint64_t *b, FILE *fp) {
-  for (int i = 0; i < 3; i++) {
-    print_bitboard(b[i], fp);
-  }
-}
-
-void print_bitboard(uint64_t b, FILE *fp) {
-  fprintf(fp, "%ld:\n", b);
-  for (int i = 63; i >= 0; i--) {
-    if (b & (ONE << i)) {
-      fprintf(fp, "1 ");
-    } else {
-      fprintf(fp, "0 ");
-    }
-    if (i % 8 == 0) {
-      fprintf(fp, "\n");
-    }
-  }
-  fprintf(fp, "\n");
-}
-
-void printf_bitboard(uint64_t b) {
-  printf("%ld:\n", b);
-  for (int i = 63; i >= 0; i--) {
-    if (b & (ONE << i)) {
-      printf("1 ");
-    } else {
-      printf("0 ");
-    }
-    if (i % 8 == 0) {
-      printf("\n");
-    }
-  }
-  printf("\n");
-}
-
-void print_boards(BOARD_ARGS game) {
-   if (game.boards[BLACK][0]) {
-     printf("-------------BLACK TOP-----------------\n");
-     printf_bitboard(game.boards[BLACK][0]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[BLACK][1]) {
-     printf("-------------BLACK MIDDLE--------------\n");
-     printf_bitboard(game.boards[BLACK][1]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[BLACK][2]) {
-     printf("-------------BLACK BOTTOM--------------\n");
-     printf_bitboard(game.boards[BLACK][2]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[WHITE][0]) {
-     printf("-------------WHITE TOP-----------------\n");
-     printf_bitboard(game.boards[WHITE][0]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[WHITE][1]) {
-     printf("-------------WHITE MIDDLE--------------\n");
-     printf_bitboard(game.boards[WHITE][1]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[WHITE][2]) {
-     printf("-------------WHITE BOTTOM--------------\n");
-     printf_bitboard(game.boards[WHITE][2]);
-     printf("---------------------------------------\n");
-   }
-}
-
-void print_game(BOARD_ARGS *args) {
-  char output[3][8][8] =
-  {{{'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'}},
-  {{'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'}},
-  {{'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'}}};
-  uint64_t x = 0;
-  int m = -1;
-  char out = ' ';
-  // Color
-  for (int i = 0; i < 2; i++) {
-    // Type
-    for (int j = 0; j < 6; j++) {
-      // Level
-      for (int k = 0; k < 3; k++) {
-        x = args->piece_boards[i][j][k];
-        m = log2_lookup(x);
-        while (x != 0) {
-          if (j == PAWN) {
-            out = 'p';
-          } else if (j == KNIGHT) {
-            out = 'n';
-          } else if (j == BISHOP) {
-            out = 'b';
-          } else if (j == ROOK) {
-            out = 'r';
-          } else if (j == QUEEN) {
-            out = 'q';
-          } else if (j == KING) {
-            out = 'k';
-          }
-          if (i == WHITE) {
-            out = toupper(out);
-          }
-          // Division = x, Modulo = y
-          output[k][m / 8][m % 8] = out;
-          x ^= (ONE << m);
-          m = log2_lookup(x);
-        }
-      }
-    }
-  }
-  for (int i = 0; i < 3; i++) {
-    if (i == 0) {
-      printf("\nTOP\n\n");
-    } else if (i == 1) {
-      printf("\nMIDDLE\n\n");
-    } else {
-      printf("\nBOTTOM\n\n");
-    }
-    for (int j = 7; j > -1; j--) {
-      printf("%d | ", j + 1);
-      for (int k = 7; k > -1; k--) {
-        printf("%c", output[i][j][k]);
-        printf(" ");
-      }
-      printf("\n");
-    }
-   printf("----------------------\n    A B C D E F G H\n");
-  }
-  printf("\n");
-  fflush(stdout);
-}
-
 
