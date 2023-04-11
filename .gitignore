@@ -1,4 +1,6 @@
 */*.exe
 */*.swp
-*/3DChess
-
+*/3DChess*
+src/graphics_dependencies/*
+src/*.dSYM
+3DChess
