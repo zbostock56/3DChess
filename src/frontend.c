@@ -30,7 +30,7 @@ unsigned int to[2] = {0,0};
 int to_move = 0; // WHITE == 0   BLACK == 1
 pthread_t g;
 int change_ready = 0;
-int turn = 0;
+int turn = 1;
 vec3 g_new_pos = {0.0, 0.0, 0.0};
 int piece_to_move = 0;
 int piece_taken = 0;
@@ -106,7 +106,8 @@ void set_game_to_graphics(unsigned int *from, unsigned int *to) {
   game_board[to[0]][to[1]] = temp;
   // {forward/back, up/down, left/right}
   glm_vec3_copy(graphics_lookup[to[0]][to[1]], g_new_pos);
-  fprintf(stderr, "\n***** g_new_pos: %f | %f | %f ******\n\n", g_new_pos[0], g_new_pos[1], g_new_pos[2]);
+  //fprintf(stderr, "\n***** g_new_pos: %f | %f | %f ******\n\n", 
+  //g_new_pos[0], g_new_pos[1], g_new_pos[2]);
   change_ready = 1;
 }
 
@@ -270,53 +271,103 @@ void print_game(BOARD_ARGS *args) {
   fflush(stdout);
 }
 
+int switch_letters(char letter) {
+  if (letter == 'A') {
+    return 7;
+  } else if (letter == 'B') {
+    return 6;
+  } else if (letter == 'C') {
+    return 5;
+  } else if (letter == 'D') {
+    return 4;
+  } else if (letter == 'E') {
+    return 3;
+  } else if (letter == 'F') {
+    return 2;
+  } else if (letter == 'G') {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 void play() {
   while (1) {
     if (to_move == 0) {
       unsigned int to[2] = {0, 0};
       unsigned int from[2] = {0, 0};
+      fprintf(stderr, "\n**********  MOVE %d **********\n\n", turn);
       print_game(&game);
-      TYPE type;
-      printf("Enter piece:\n0: BISHOP\n1: ROOK\n2: QUEEN\n"
+      TYPE type = 0;
+      printf("Enter piece to move:\n0: BISHOP\n1: ROOK\n2: QUEEN\n"
       "3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
-      scanf("%d", &piece);
-      if (piece == 0) {
-        type = BISHOP;
-      } else if (piece == 1) {
-        type = ROOK;
-      } else if (piece == 2) {
-        type = QUEEN;
-      } else if (piece == 3) {
-        type = PAWN;
-      } else if (piece == 4) {
-        type = KNIGHT;
-      } else if (piece == 5) {
-        type = KING;
-      }
-      printf("Enter from level (0 - 2) and position (1 - 64)\n");
-      scanf("%u %u", &from[0], &from[1]);
-      if (from[1] > 63) {
-        from[1] = 63;
-      } else if (from[1] < 0) {
-        from[1] = 0;
-      }
-      if (from[0] < 0) {
-        from[0] = 0;
-      } else if (from[0] > 2) {
-        from[0] = 2;
+      int error = scanf("%d", &piece);
+      if (error != EOF) {
+        if (piece == 0) {
+          type = BISHOP;
+        } else if (piece == 1) {
+          type = ROOK;
+        } else if (piece == 2) {
+          type = QUEEN;
+        } else if (piece == 3) {
+          type = PAWN;
+        } else if (piece == 4) {
+          type = KNIGHT;
+        } else if (piece == 5) {
+          type = KING;
+        } else {
+          change_ready = -1;
+          exit(0);
+        }
+      } else {
+        perror("scanf (piece input)");
+        exit(1);
       }
 
-      printf("Enter to level (0 - 2) and position (1 - 64)\n");
-      scanf("%u %u", &to[0], &to[1]);
-      if (to[1] > 63) {
-        to[1] = 63;
-      } else if (to[1] < 0) {
-        to[1] = 0;
+      char file_from;
+      unsigned int rank_from = 0;
+      printf("Enter Level (0 - 2) and position (A - H)(1 - 8)"
+      " of a piece\n[0-2] [A-H][1-8]\n");
+      error = scanf("%u %c%u", &from[0], &file_from, &rank_from);
+      if (error != EOF) {
+        if (file_from > 72) {
+          file_from = 'H';
+        } else if (file_from < 65) {
+          file_from = 'A';
+        }
+        if (from[0] > 2) {
+          from[0] = 2;
+        } else if (from[0] < 0) {
+          from[0] = 0;
+        }
+        from[1] += switch_letters(file_from);
+        from[1] += ((rank_from - 1) * 8);
+      } else {
+        perror("scanf (from input)");
+        exit(1);
       }
-      if (to[0] < 0) {
-        to[0] = 0;
-      } else if (to[0] > 2) {
-        to[0] = 2;
+
+      char file_to;
+      unsigned int rank_to = 0;
+      printf("Enter Level (0 - 2) and position (A - H)(1 - 8) to"
+      " ending position\n[0-2] [A-H][1-8]\n");
+      error = scanf("%u %c%u", &to[0], &file_to, &rank_to);
+      if (error != EOF) {
+        if (file_to > 72) {
+          file_from = 'H';
+        } else if (file_to < 65) {
+          file_to = 'A';
+        }
+        if (to[0] > 2) {
+          to[0] = 2;
+        } else if (to[0] < 0) {
+          to[0] = 0;
+        }
+        to[1] += switch_letters(file_to);
+        to[1] += ((rank_to - 1) * 8);
+      } else {
+        perror("scanf (to input)");
+        exit(1);
       }
 
       printf("from[0] %u\nfrom[1] %u\nto[0]"
@@ -354,7 +405,7 @@ void play() {
       stuff = 0;
       //printf("Rating: %u\n", com_move.rating);
       make_move(&game, BLACK, type, from, to);
-      print_game(&game);
+      //print_game(&game);
       turn++;
 
       // MOVE PIECE ON GAME BOARD FOR GRAPHICS RENDERING
@@ -640,6 +691,8 @@ int main() {
           piece_taken = 0;
         }
       }
+    } else if (change_ready == -1) {
+      exit(0);
     }
 
     float curFrame = glfwGetTime();
@@ -673,8 +726,10 @@ int main() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 0.0, 0.75, 1.0);
     for (int i = 0; i < 16; i++) {
-      glm_vec3_scale(white[i]->scale, outline_scale, white[i]->scale);
-      draw_entity(piece_shader, white[i]);
+      if (is_drawn_w[i]) {
+        glm_vec3_scale(white[i]->scale, outline_scale, white[i]->scale);
+        draw_entity(piece_shader, white[i]);
+      }
     }
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 1.0, 1.0, 1.0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -694,8 +749,10 @@ int main() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 1.0, 119.0/255.0, 0.0);
     for (int i = 0; i < 16; i++) {
-      glm_vec3_scale(black[i]->scale, outline_scale, black[i]->scale);
-      draw_entity(piece_shader, black[i]);
+      if (is_drawn_b[i]) {
+        glm_vec3_scale(black[i]->scale, outline_scale, black[i]->scale);
+        draw_entity(piece_shader, black[i]);
+      }
     }
     glUniform3f(glGetUniformLocation(piece_shader, "col"), 0.0, 0.0, 0.0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
