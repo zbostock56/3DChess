@@ -84,335 +84,6 @@ int game_board[3][64] = {
 }
 };
 
-// Helper Functions
-
-void set_game_to_graphics(unsigned int *from, unsigned int *to) {
-  if (to_move == 0) {
-    moved = 0;
-  } else {
-    moved = 1;
-  }
-  int temp = game_board[from[0]][from[1]];
-  piece_to_move = temp;
-  piece_to_move--; // OFFSET PIECE NUMBER FOR ARRAY INDEXING
-  if (to_move == 1) {
-    // BLACK IS MOVING, SUBTRACT BY 16 FOR CORRECT OFFSET
-    piece_to_move--;
-  }
-  game_board[from[0]][from[1]] = 0;
-  if (game_board[to[0]][to[1]] != 0) {
-    piece_taken = game_board[to[0]][to[1]];
-  }
-  game_board[to[0]][to[1]] = temp;
-  // {forward/back, up/down, left/right}
-  glm_vec3_copy(graphics_lookup[to[0]][to[1]], g_new_pos);
-  //fprintf(stderr, "\n***** g_new_pos: %f | %f | %f ******\n\n", 
-  //g_new_pos[0], g_new_pos[1], g_new_pos[2]);
-  change_ready = 1;
-}
-
-void printf_bitboards(uint64_t *b) {
-  for (int i = 0; i < 3; i++) {
-    printf("%s\n", i == 0 ? "TOP" : i == 1 ? "MIDDLE" : "BOTTOM");
-    printf_bitboard(b[i]);
-  }
-}
-
-void print_bitboards(uint64_t *b, FILE *fp) {
-  for (int i = 0; i < 3; i++) {
-    print_bitboard(b[i], fp);
-  }
-}
-
-void print_bitboard(uint64_t b, FILE *fp) {
-  fprintf(fp, "%ld:\n", b);
-  for (int i = 63; i >= 0; i--) {
-    if (b & (ONE << i)) {
-      fprintf(fp, "1 ");
-    } else {
-      fprintf(fp, "0 ");
-    }
-    if (i % 8 == 0) {
-      fprintf(fp, "\n");
-    }
-  }
-  fprintf(fp, "\n");
-}
-
-void printf_bitboard(uint64_t b) {
-  printf("%ld:\n", b);
-  for (int i = 63; i >= 0; i--) {
-    if (b & (ONE << i)) {
-      printf("1 ");
-    } else {
-      printf("0 ");
-    }
-    if (i % 8 == 0) {
-      printf("\n");
-    }
-  }
-  printf("\n");
-}
-
-void print_boards(BOARD_ARGS game) {
-   if (game.boards[BLACK][0]) {
-     printf("-------------BLACK TOP-----------------\n");
-     printf_bitboard(game.boards[BLACK][0]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[BLACK][1]) {
-     printf("-------------BLACK MIDDLE--------------\n");
-     printf_bitboard(game.boards[BLACK][1]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[BLACK][2]) {
-     printf("-------------BLACK BOTTOM--------------\n");
-     printf_bitboard(game.boards[BLACK][2]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[WHITE][0]) {
-     printf("-------------WHITE TOP-----------------\n");
-     printf_bitboard(game.boards[WHITE][0]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[WHITE][1]) {
-     printf("-------------WHITE MIDDLE--------------\n");
-     printf_bitboard(game.boards[WHITE][1]);
-     printf("---------------------------------------\n");
-   }
-   if (game.boards[WHITE][2]) {
-     printf("-------------WHITE BOTTOM--------------\n");
-     printf_bitboard(game.boards[WHITE][2]);
-     printf("---------------------------------------\n");
-   }
-}
-
-void print_game(BOARD_ARGS *args) {
-  char output[3][8][8] =
-  {{{'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'}},
-  {{'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'}},
-  {{'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'},
-  {'-','-','-','-','-','-','-','-'}}};
-  uint64_t x = 0;
-  int m = -1;
-  char out = ' ';
-  // Color
-  for (int i = 0; i < 2; i++) {
-    // Type
-    for (int j = 0; j < 6; j++) {
-      // Level
-      for (int k = 0; k < 3; k++) {
-        x = args->piece_boards[i][j][k];
-        m = log2_lookup(x);
-        while (x != 0) {
-          if (j == PAWN) {
-            out = 'p';
-          } else if (j == KNIGHT) {
-            out = 'n';
-          } else if (j == BISHOP) {
-            out = 'b';
-          } else if (j == ROOK) {
-            out = 'r';
-          } else if (j == QUEEN) {
-            out = 'q';
-          } else if (j == KING) {
-            out = 'k';
-          }
-          if (i == WHITE) {
-            out = toupper(out);
-          }
-          // Division = x, Modulo = y
-          output[k][m / 8][m % 8] = out;
-          x ^= (ONE << m);
-          m = log2_lookup(x);
-        }
-      }
-    }
-  }
-  for (int i = 0; i < 3; i++) {
-    if (i == 0) {
-      printf("\nTOP\n\n");
-    } else if (i == 1) {
-      printf("\nMIDDLE\n\n");
-    } else {
-      printf("\nBOTTOM\n\n");
-    }
-    for (int j = 7; j > -1; j--) {
-      printf("%d | ", j + 1);
-      for (int k = 7; k > -1; k--) {
-        printf("%c", output[i][j][k]);
-        printf(" ");
-      }
-      printf("\n");
-    }
-   printf("----------------------\n    A B C D E F G H\n");
-  }
-  printf("\n");
-  fflush(stdout);
-}
-
-int switch_letters(char letter) {
-  if (letter == 'A') {
-    return 7;
-  } else if (letter == 'B') {
-    return 6;
-  } else if (letter == 'C') {
-    return 5;
-  } else if (letter == 'D') {
-    return 4;
-  } else if (letter == 'E') {
-    return 3;
-  } else if (letter == 'F') {
-    return 2;
-  } else if (letter == 'G') {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-void play() {
-  while (1) {
-    if (to_move == 0) {
-      unsigned int to[2] = {0, 0};
-      unsigned int from[2] = {0, 0};
-      fprintf(stderr, "\n**********  MOVE %d **********\n\n", turn);
-      print_game(&game);
-      TYPE type = 0;
-      printf("Enter piece to move:\n0: BISHOP\n1: ROOK\n2: QUEEN\n"
-      "3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
-      int error = scanf("%d", &piece);
-      if (error != EOF) {
-        if (piece == 0) {
-          type = BISHOP;
-        } else if (piece == 1) {
-          type = ROOK;
-        } else if (piece == 2) {
-          type = QUEEN;
-        } else if (piece == 3) {
-          type = PAWN;
-        } else if (piece == 4) {
-          type = KNIGHT;
-        } else if (piece == 5) {
-          type = KING;
-        } else {
-          change_ready = -1;
-          exit(0);
-        }
-      } else {
-        perror("scanf (piece input)");
-        exit(1);
-      }
-
-      char file_from;
-      unsigned int rank_from = 0;
-      printf("Enter Level (0 - 2) and position (A - H)(1 - 8)"
-      " of a piece\n[0-2] [A-H][1-8]\n");
-      error = scanf("%u %c%u", &from[0], &file_from, &rank_from);
-      if (error != EOF) {
-        if (file_from > 72) {
-          file_from = 'H';
-        } else if (file_from < 65) {
-          file_from = 'A';
-        }
-        if (from[0] > 2) {
-          from[0] = 2;
-        } else if (from[0] < 0) {
-          from[0] = 0;
-        }
-        from[1] += switch_letters(file_from);
-        from[1] += ((rank_from - 1) * 8);
-      } else {
-        perror("scanf (from input)");
-        exit(1);
-      }
-
-      char file_to;
-      unsigned int rank_to = 0;
-      printf("Enter Level (0 - 2) and position (A - H)(1 - 8) to"
-      " ending position\n[0-2] [A-H][1-8]\n");
-      error = scanf("%u %c%u", &to[0], &file_to, &rank_to);
-      if (error != EOF) {
-        if (file_to > 72) {
-          file_from = 'H';
-        } else if (file_to < 65) {
-          file_to = 'A';
-        }
-        if (to[0] > 2) {
-          to[0] = 2;
-        } else if (to[0] < 0) {
-          to[0] = 0;
-        }
-        to[1] += switch_letters(file_to);
-        to[1] += ((rank_to - 1) * 8);
-      } else {
-        perror("scanf (to input)");
-        exit(1);
-      }
-
-      printf("from[0] %u\nfrom[1] %u\nto[0]"
-      " %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
-      make_move(&game, WHITE, type, from, to);
-      // MOVE PIECE ON GAME BOARD FOR GRAPHICS RENDERING
-      set_game_to_graphics(from, to);
-      to_move = 1;
-    } else {
-      //MOVE com_move = level_zero_search(&game, turn, BLACK, 4, INT_MIN, INT_MAX);
-      MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
-      unsigned int *to = com_move.to;
-      unsigned int *from = com_move.from;
-      printf("BLACK'S MOVE\nfrom[0] %u\nfrom[1]"
-      " %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
-      printf("COMPUTER EVAL: %d\n", com_move.score);
-      uint64_t cur = (ONE << from[1]);
-      TYPE type;
-      if (game.piece_boards[BLACK][BISHOP][from[0]] & cur) {
-        type = BISHOP;
-      } else if (game.piece_boards[BLACK][ROOK][from[0]] & cur) {
-        type = ROOK;
-      } else if (game.piece_boards[BLACK][QUEEN][from[0]] & cur) {
-        type = QUEEN;
-      } else if (game.piece_boards[BLACK][PAWN][from[0]] & cur) {
-        type = PAWN;
-      } else if (game.piece_boards[BLACK][KNIGHT][from[0]] & cur) {
-        type = KNIGHT;
-      } else {
-        type = KING;
-      }
-
-      to_move = 0;
-      printf("Positions Searched: %llu\n", stuff);
-      stuff = 0;
-      //printf("Rating: %u\n", com_move.rating);
-      make_move(&game, BLACK, type, from, to);
-      //print_game(&game);
-      turn++;
-
-      // MOVE PIECE ON GAME BOARD FOR GRAPHICS RENDERING
-      set_game_to_graphics(from, to);
-    }
-  }
-}
 
 int main() {
   glfwInit();
@@ -937,4 +608,334 @@ void mouse_input(GLFWwindow *window, double xpos, double ypos) {
   glm_vec3_cross(cam_front, world_up, cam_up);
   glm_vec3_cross(cam_up, cam_front, cam_up);
   glm_vec3_normalize(cam_front);
+}
+
+// Helper Functions
+
+void set_game_to_graphics(unsigned int *from, unsigned int *to) {
+  if (to_move == 0) {
+    moved = 0;
+  } else {
+    moved = 1;
+  }
+  int temp = game_board[from[0]][from[1]];
+  piece_to_move = temp;
+  piece_to_move--; // OFFSET PIECE NUMBER FOR ARRAY INDEXING
+  if (to_move == 1) {
+    // BLACK IS MOVING, SUBTRACT BY 16 FOR CORRECT OFFSET
+    piece_to_move--;
+  }
+  game_board[from[0]][from[1]] = 0;
+  if (game_board[to[0]][to[1]] != 0) {
+    piece_taken = game_board[to[0]][to[1]];
+  }
+  game_board[to[0]][to[1]] = temp;
+  // {forward/back, up/down, left/right}
+  glm_vec3_copy(graphics_lookup[to[0]][to[1]], g_new_pos);
+  //fprintf(stderr, "\n***** g_new_pos: %f | %f | %f ******\n\n", 
+  //g_new_pos[0], g_new_pos[1], g_new_pos[2]);
+  change_ready = 1;
+}
+
+void printf_bitboards(uint64_t *b) {
+  for (int i = 0; i < 3; i++) {
+    printf("%s\n", i == 0 ? "TOP" : i == 1 ? "MIDDLE" : "BOTTOM");
+    printf_bitboard(b[i]);
+  }
+}
+
+void print_bitboards(uint64_t *b, FILE *fp) {
+  for (int i = 0; i < 3; i++) {
+    print_bitboard(b[i], fp);
+  }
+}
+
+void print_bitboard(uint64_t b, FILE *fp) {
+  fprintf(fp, "%ld:\n", b);
+  for (int i = 63; i >= 0; i--) {
+    if (b & (ONE << i)) {
+      fprintf(fp, "1 ");
+    } else {
+      fprintf(fp, "0 ");
+    }
+    if (i % 8 == 0) {
+      fprintf(fp, "\n");
+    }
+  }
+  fprintf(fp, "\n");
+}
+
+void printf_bitboard(uint64_t b) {
+  printf("%ld:\n", b);
+  for (int i = 63; i >= 0; i--) {
+    if (b & (ONE << i)) {
+      printf("1 ");
+    } else {
+      printf("0 ");
+    }
+    if (i % 8 == 0) {
+      printf("\n");
+    }
+  }
+  printf("\n");
+}
+
+void print_boards(BOARD_ARGS game) {
+   if (game.boards[BLACK][0]) {
+     printf("-------------BLACK TOP-----------------\n");
+     printf_bitboard(game.boards[BLACK][0]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[BLACK][1]) {
+     printf("-------------BLACK MIDDLE--------------\n");
+     printf_bitboard(game.boards[BLACK][1]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[BLACK][2]) {
+     printf("-------------BLACK BOTTOM--------------\n");
+     printf_bitboard(game.boards[BLACK][2]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][0]) {
+     printf("-------------WHITE TOP-----------------\n");
+     printf_bitboard(game.boards[WHITE][0]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][1]) {
+     printf("-------------WHITE MIDDLE--------------\n");
+     printf_bitboard(game.boards[WHITE][1]);
+     printf("---------------------------------------\n");
+   }
+   if (game.boards[WHITE][2]) {
+     printf("-------------WHITE BOTTOM--------------\n");
+     printf_bitboard(game.boards[WHITE][2]);
+     printf("---------------------------------------\n");
+   }
+}
+
+void print_game(BOARD_ARGS *args) {
+  char output[3][8][8] =
+  {{{'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'}},
+  {{'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'}},
+  {{'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'},
+  {'-','-','-','-','-','-','-','-'}}};
+  uint64_t x = 0;
+  int m = -1;
+  char out = ' ';
+  // Color
+  for (int i = 0; i < 2; i++) {
+    // Type
+    for (int j = 0; j < 6; j++) {
+      // Level
+      for (int k = 0; k < 3; k++) {
+        x = args->piece_boards[i][j][k];
+        m = log2_lookup(x);
+        while (x != 0) {
+          if (j == PAWN) {
+            out = 'p';
+          } else if (j == KNIGHT) {
+            out = 'n';
+          } else if (j == BISHOP) {
+            out = 'b';
+          } else if (j == ROOK) {
+            out = 'r';
+          } else if (j == QUEEN) {
+            out = 'q';
+          } else if (j == KING) {
+            out = 'k';
+          }
+          if (i == WHITE) {
+            out = toupper(out);
+          }
+          // Division = x, Modulo = y
+          output[k][m / 8][m % 8] = out;
+          x ^= (ONE << m);
+          m = log2_lookup(x);
+        }
+      }
+    }
+  }
+  for (int i = 0; i < 3; i++) {
+    if (i == 0) {
+      printf("\nTOP\n\n");
+    } else if (i == 1) {
+      printf("\nMIDDLE\n\n");
+    } else {
+      printf("\nBOTTOM\n\n");
+    }
+    for (int j = 7; j > -1; j--) {
+      printf("%d | ", j + 1);
+      for (int k = 7; k > -1; k--) {
+        printf("%c", output[i][j][k]);
+        printf(" ");
+      }
+      printf("\n");
+    }
+   printf("----------------------\n    A B C D E F G H\n");
+  }
+  printf("\n");
+  fflush(stdout);
+}
+
+int switch_letters(char letter) {
+  if (letter == 'A') {
+    return 7;
+  } else if (letter == 'B') {
+    return 6;
+  } else if (letter == 'C') {
+    return 5;
+  } else if (letter == 'D') {
+    return 4;
+  } else if (letter == 'E') {
+    return 3;
+  } else if (letter == 'F') {
+    return 2;
+  } else if (letter == 'G') {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+void play() {
+  while (1) {
+    if (to_move == 0) {
+      unsigned int to[2] = {0, 0};
+      unsigned int from[2] = {0, 0};
+      fprintf(stderr, "\n**********  MOVE %d **********\n\n", turn);
+      print_game(&game);
+      TYPE type = 0;
+      printf("Enter piece to move:\n0: BISHOP\n1: ROOK\n2: QUEEN\n"
+      "3: PAWN\n4: KNIGHT\n5: KING\nQuit (Any Other)\n");
+      int error = scanf("%d", &piece);
+      if (error != EOF) {
+        if (piece == 0) {
+          type = BISHOP;
+        } else if (piece == 1) {
+          type = ROOK;
+        } else if (piece == 2) {
+          type = QUEEN;
+        } else if (piece == 3) {
+          type = PAWN;
+        } else if (piece == 4) {
+          type = KNIGHT;
+        } else if (piece == 5) {
+          type = KING;
+        } else {
+          change_ready = -1;
+          exit(0);
+        }
+      } else {
+        perror("scanf (piece input)");
+        exit(1);
+      }
+
+      char file_from;
+      unsigned int rank_from = 0;
+      printf("Enter Level (0 - 2) and position (A - H)(1 - 8)"
+      " of a piece\n[0-2] [A-H][1-8]\n");
+      error = scanf("%u %c%u", &from[0], &file_from, &rank_from);
+      if (error != EOF) {
+        if (file_from > 72) {
+          file_from = 'H';
+        } else if (file_from < 65) {
+          file_from = 'A';
+        }
+        if (from[0] > 2) {
+          from[0] = 2;
+        } else if (from[0] < 0) {
+          from[0] = 0;
+        }
+        from[1] += switch_letters(file_from);
+        from[1] += ((rank_from - 1) * 8);
+      } else {
+        perror("scanf (from input)");
+        exit(1);
+      }
+
+      char file_to;
+      unsigned int rank_to = 0;
+      printf("Enter Level (0 - 2) and position (A - H)(1 - 8) to"
+      " ending position\n[0-2] [A-H][1-8]\n");
+      error = scanf("%u %c%u", &to[0], &file_to, &rank_to);
+      if (error != EOF) {
+        if (file_to > 72) {
+          file_from = 'H';
+        } else if (file_to < 65) {
+          file_to = 'A';
+        }
+        if (to[0] > 2) {
+          to[0] = 2;
+        } else if (to[0] < 0) {
+          to[0] = 0;
+        }
+        to[1] += switch_letters(file_to);
+        to[1] += ((rank_to - 1) * 8);
+      } else {
+        perror("scanf (to input)");
+        exit(1);
+      }
+
+      printf("from[0] %u\nfrom[1] %u\nto[0]"
+      " %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+      make_move(&game, WHITE, type, from, to);
+      // MOVE PIECE ON GAME BOARD FOR GRAPHICS RENDERING
+      set_game_to_graphics(from, to);
+      to_move = 1;
+    } else {
+      //MOVE com_move = level_zero_search(&game, turn, BLACK, 4, INT_MIN, INT_MAX);
+      MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
+      unsigned int *to = com_move.to;
+      unsigned int *from = com_move.from;
+      printf("BLACK'S MOVE\nfrom[0] %u\nfrom[1]"
+      " %u\nto[0] %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+      printf("COMPUTER EVAL: %d\n", com_move.score);
+      uint64_t cur = (ONE << from[1]);
+      TYPE type;
+      if (game.piece_boards[BLACK][BISHOP][from[0]] & cur) {
+        type = BISHOP;
+      } else if (game.piece_boards[BLACK][ROOK][from[0]] & cur) {
+        type = ROOK;
+      } else if (game.piece_boards[BLACK][QUEEN][from[0]] & cur) {
+        type = QUEEN;
+      } else if (game.piece_boards[BLACK][PAWN][from[0]] & cur) {
+        type = PAWN;
+      } else if (game.piece_boards[BLACK][KNIGHT][from[0]] & cur) {
+        type = KNIGHT;
+      } else {
+        type = KING;
+      }
+
+      to_move = 0;
+      printf("Positions Searched: %llu\n", stuff);
+      stuff = 0;
+      //printf("Rating: %u\n", com_move.rating);
+      make_move(&game, BLACK, type, from, to);
+      //print_game(&game);
+      turn++;
+
+      // MOVE PIECE ON GAME BOARD FOR GRAPHICS RENDERING
+      set_game_to_graphics(from, to);
+    }
+  }
 }

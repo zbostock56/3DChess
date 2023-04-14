@@ -1,3 +1,46 @@
+#include <glad/glad.h>
+#include <glfw3.h>
+#include <string.h>
+#include <cglm/cglm.h>
+#include <cglm/cam.h>
+#include <cglm/mat4.h>
+#include <cglm/quat.h>
+#include <entity_str.h>
+#include <pthread.h>
+
+#define DIR "/home/zbostock/Projects/3DChess"
+
+// HELPERS
+
+void set_game_to_graphics(unsigned int *from, unsigned int *to);
+void printf_bitboards(uint64_t *b);
+void print_bitboards(uint64_t *b, FILE *fp);
+void print_bitboard(uint64_t b, FILE *fp);
+void printf_bitboard(uint64_t b);
+void print_boards(BOARD_ARGS game);
+void print_game(BOARD_ARGS *args);
+int switch_letters(char letter);
+void play();
+
+extern unsigned long long stuff;
+MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,
+  int beta, unsigned int turn);
+void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
+  unsigned int *from, unsigned int *to);
+MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
+  unsigned int depth, int alpha, int beta);
+void play();
+void set_game_to_graphics(unsigned int *from, unsigned int *to);
+
+// Graphics Functions
+
+void mouse_input(GLFWwindow *widnow, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+void framebuffer_size_callback(GLFWwindow *, int, int);
+void keyboard_input(GLFWwindow *window);
+
+// BOARD POSITIONS
+
 #define init_pieceboard(game) {\
   game.boards[WHITE][TOP] = 0;\
   game.boards[WHITE][MIDDLE] = 0xffff;\
@@ -189,31 +232,4 @@
 }
 #endif
 
-#include <glad/glad.h>
-#include <glfw3.h>
-#include <string.h>
-#include <cglm/cam.h>
-#include <cglm/mat4.h>
-#include <cglm/quat.h>
-#include <entity_str.h>
-#include <pthread.h>
-
-#define DIR "/home/zbostock/Projects/3DChess"
-
-extern unsigned long long stuff;
-MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,
-  int beta, unsigned int turn);
-void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
-  unsigned int *from, unsigned int *to);
-MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
-  unsigned int depth, int alpha, int beta);
-void play();
-void set_game_to_graphics(unsigned int *from, unsigned int *to);
-
-// Graphics Functions
-
-void mouse_input(GLFWwindow *widnow, double xpos, double ypos);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void framebuffer_size_callback(GLFWwindow *, int, int);
-void keyboard_input(GLFWwindow *window);
 

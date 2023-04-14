@@ -98,15 +98,15 @@ unsigned int get_weighted_rating(unsigned int turn,
   //int neg_multiplier = (unsigned int)(-0.0001 * (turn * turn * turn) + 4);
   if (neg_multiplier <= 1)
     neg_multiplier = 1;
-  unsigned int pn_multiplier = (unsigned int) neg_multiplier;
-  unsigned int pr = 0;
-  unsigned int nr = 0;
-  unsigned int br = 0;
-  unsigned int rr = 0;
-  unsigned int qr = 0;
-  unsigned int kr = 0;
-  unsigned int temp = 0;
-  int rating_order[6];
+    unsigned int pn_multiplier = (unsigned int) neg_multiplier;
+    unsigned int pr = 0;
+    unsigned int nr = 0;
+    unsigned int br = 0;
+    unsigned int rr = 0;
+    unsigned int qr = 0;
+    unsigned int kr = 0;
+    unsigned int temp = 0;
+    int rating_order[6];
   if (neg_multiplier < 0) {
     neg_multiplier = 0;
   }

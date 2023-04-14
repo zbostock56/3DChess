@@ -12,7 +12,7 @@ linux_include = -I ../include
 linux_link = -l:libglfw.so.3.3 -lGL -lX11 -l:libXrandr.so.2 -l:libXi.so.6 -ldl -lm -lcglm -lpthread
 
 
-default:
+linux:
 	gcc -Wall -g $(linux_include) $(linux_libs) -o 3DChessOp $(files) $(linux_link)
 	gcc -Wall -O3 $(linux_include) $(linux_libs) -o 3DChessOp $(files) $(linux_link)
 
