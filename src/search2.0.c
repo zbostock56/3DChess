@@ -1,6 +1,5 @@
 #include <search.h>
 
-
 /*
   ORDER OF EVENTS:
   -> Determine which side it is to move
@@ -193,6 +192,7 @@ void s_th_wrapper(void *arg) {
   printf("hit with %d\n", args->id);
   pthread_exit(0);
 }
+
 long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
             int alpha, int beta, unsigned int turn) {
