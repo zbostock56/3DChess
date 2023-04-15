@@ -214,7 +214,7 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
         pl &= ~args.boards[enemy_t][pos[0]];
       } else {
         // SHADOW TO PREVENT PAWN FIRST MOVE FROM JUMPING OVER OTHER PIECE
-        unsigned int front = pos[1];
+        int front = pos[1];
         if (player == WHITE) {
           front += 8;
         } else {

@@ -21,6 +21,7 @@ void print_boards(BOARD_ARGS game);
 void print_game(BOARD_ARGS *args);
 int switch_letters(char letter);
 void play();
+void output_to_file(BOARD_ARGS *args, SIDE to_move);
 
 extern unsigned long long stuff;
 MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,

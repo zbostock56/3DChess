@@ -5,3 +5,5 @@
 src/graphics_dependencies/*
 src/*.dSYM
 3DChess
+src/outreg
+src/outop
