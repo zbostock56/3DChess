@@ -14,3 +14,4 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                unsigned int *from, unsigned int *to);
 void print_game(BOARD_ARGS *args);
+void write_to_file(int result, FILE *fp);

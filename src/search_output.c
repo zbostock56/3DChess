@@ -14,6 +14,7 @@ node_t chosen_moves[1000000];
 node_t possible_moves[5000];
 int possible_moves_i = 0;
 int piece_positions[192];
+int chosen_moves_i = 0;
 
 void search_output(BOARD_ARGS *args, SIDE to_move) {
   SIDE enemy = to_move == WHITE ? BLACK : WHITE;
@@ -95,7 +96,7 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
 
 void translate_position(BOARD_ARGS *args, int arr_pos) {
   /* MAKE SURE TO FREE */
-  int *p = (int *) calloc(192, sizeof(int));
+  //int *p = (int *) calloc(192, sizeof(int));
   uint64_t x = 0;
   int m = -1;
   int val = 0;
@@ -118,14 +119,15 @@ void translate_position(BOARD_ARGS *args, int arr_pos) {
           } else if (j == KNIGHT) {
             val = 5;
           }
-          p[(k * 64) + m] = val;
+          //p[(k * 64) + m] = val;
+          possible_moves[arr_pos].position[(k + 64) + m] = val;
           x ^= (ONE << m);
           m = log2_lookup(x);
         }
       }
     }
   }
-  memcpy(possible_moves[arr_pos].position, p, 192 * sizeof(int));
+  //memcpy(possible_moves[arr_pos].position, p, 192 * sizeof(int));
 }
 
 void reset_possible_moves() {
@@ -143,19 +145,32 @@ void reset_possible_moves() {
 
 void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   srand(time(0));
-  //FILE *fp = fopen("output.csv", "w+");
-  int chosen_moves_i = 0;
+  FILE *fp = fopen("output.csv", "a+");
   int turn_number = 0;
   int turn = 0;
   while (1) {
+    if (turn_number == 5000) {
+      fprintf(stderr, "HIT MAX MOVE NUMBER... EXITING...\n");
+      fclose(fp);
+      exit(0);
+    }
     if (turn == 0) {
+      // WHITE'S MOVE
       search_output(args, WHITE);
       fprintf(stderr, "MOVE NUMBER: %d\n", turn_number++);
-      //print_game(args);
+      print_game(args);
       //sleep(6);
       if (possible_moves_i == 1) {
         // MATE
-        chosen_moves[chosen_moves_i++] = possible_moves[1];
+        if (possible_moves[0].result == 1) {
+          // BLACK IS IN MATE
+          fprintf(stderr, "BLACK IN MATE\n");
+          write_to_file(1, fp);
+        } else {
+          // WHITE IN MATE
+          fprintf(stderr, "WHITE IN MATE\n");
+          write_to_file(0, fp);
+        }
         return;
       } else {
         // NORMAL MOVE
@@ -183,12 +198,21 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
       }
       turn = 1;
     } else {
+      // BLACK'S MOVE
       search_output(args, BLACK);
-      //print_game(args);
+      print_game(args);
       //sleep(6);
       if (possible_moves_i == 1) {
         // MATE
-        chosen_moves[chosen_moves_i].result = possible_moves[1].result == 1 ? 0 : 1;
+        if (possible_moves[0].result == 1) {
+          // WHITE IN MATE
+          fprintf(stderr, "WHITE IN MATE\n");
+          write_to_file(0, fp);
+        } else {
+          // BLACK IN MATE
+          fprintf(stderr, "BLACK IN MATE\n");
+          write_to_file(1, fp);
+        }
         return;
       } else {
         // NORMAL MOVE
@@ -302,3 +326,27 @@ void print_game(BOARD_ARGS *args) {
   fflush(stdout);
 }
 
+void write_to_file(int result, FILE *fp) {
+  if (result) {
+    // GAME WAS A WIN
+    for (int i = 0; i < chosen_moves_i; i++) {
+      for (int j = 0; j < 192; j++) {
+        fprintf(fp, "%c", chosen_moves[i].position[j]);
+      }
+      fprintf(fp, ",%u,%u,%u,%u,%d\n", chosen_moves[i].level_from,
+              chosen_moves[i].bitposition_from, chosen_moves[i].level_to,
+              chosen_moves[i].bitposition_to, 1);
+    }
+  } else {
+    // GAME WAS A LOSS
+    for (int i = 0; i < chosen_moves_i; i++) {
+      for (int j = 0; j < 192; j++) {
+        fprintf(fp, "%c", chosen_moves[i].position[j]);
+      }
+      fprintf(fp, ",%u,%u,%u,%u,%d\n", chosen_moves[i].level_from,
+              chosen_moves[i].bitposition_from, chosen_moves[i].level_to,
+              chosen_moves[i].bitposition_to, 0);
+    }
+  }
+  fclose(fp);
+}
