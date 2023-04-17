@@ -1,7 +1,7 @@
 #include <search_output.h>
 
 typedef struct node {
-  int position[192];
+  int *position;
   unsigned int level_from;
   unsigned int bitposition_from;
   unsigned int level_to;
@@ -96,7 +96,7 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
 
 void translate_position(BOARD_ARGS *args, int arr_pos) {
   /* MAKE SURE TO FREE */
-  //int *p = (int *) calloc(192, sizeof(int));
+  int *p = (int *) calloc(192, sizeof(int));
   uint64_t x = 0;
   int m = -1;
   int val = 0;
@@ -119,15 +119,14 @@ void translate_position(BOARD_ARGS *args, int arr_pos) {
           } else if (j == KNIGHT) {
             val = 5;
           }
-          //p[(k * 64) + m] = val;
-          possible_moves[arr_pos].position[(k + 64) + m] = val;
+          p[(k * 64) + m] = val;
           x ^= (ONE << m);
           m = log2_lookup(x);
         }
       }
     }
   }
-  //memcpy(possible_moves[arr_pos].position, p, 192 * sizeof(int));
+  possible_moves[arr_pos].position = p;
 }
 
 void reset_possible_moves() {
@@ -149,7 +148,7 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   int turn_number = 0;
   int turn = 0;
   while (1) {
-    if (turn_number == 5000) {
+    if (turn_number == 1000) {
       fprintf(stderr, "HIT MAX MOVE NUMBER... EXITING...\n");
       fclose(fp);
       exit(0);
@@ -158,7 +157,7 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
       // WHITE'S MOVE
       search_output(args, WHITE);
       fprintf(stderr, "MOVE NUMBER: %d\n", turn_number++);
-      print_game(args);
+      //print_game(args);
       //sleep(6);
       if (possible_moves_i == 1) {
         // MATE
@@ -200,7 +199,7 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
     } else {
       // BLACK'S MOVE
       search_output(args, BLACK);
-      print_game(args);
+      //print_game(args);
       //sleep(6);
       if (possible_moves_i == 1) {
         // MATE
@@ -327,11 +326,11 @@ void print_game(BOARD_ARGS *args) {
 }
 
 void write_to_file(int result, FILE *fp) {
-  if (result) {
+  if (result == 1) {
     // GAME WAS A WIN
     for (int i = 0; i < chosen_moves_i; i++) {
       for (int j = 0; j < 192; j++) {
-        fprintf(fp, "%c", chosen_moves[i].position[j]);
+        fprintf(fp, "%d", chosen_moves[i].position[j]);
       }
       fprintf(fp, ",%u,%u,%u,%u,%d\n", chosen_moves[i].level_from,
               chosen_moves[i].bitposition_from, chosen_moves[i].level_to,
@@ -341,7 +340,7 @@ void write_to_file(int result, FILE *fp) {
     // GAME WAS A LOSS
     for (int i = 0; i < chosen_moves_i; i++) {
       for (int j = 0; j < 192; j++) {
-        fprintf(fp, "%c", chosen_moves[i].position[j]);
+        fprintf(fp, "%d", chosen_moves[i].position[j]);
       }
       fprintf(fp, ",%u,%u,%u,%u,%d\n", chosen_moves[i].level_from,
               chosen_moves[i].bitposition_from, chosen_moves[i].level_to,
