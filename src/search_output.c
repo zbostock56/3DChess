@@ -75,7 +75,7 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
             possible_moves[possible_moves_i].level_from = move.from[0];
             possible_moves[possible_moves_i].level_to = move.to[0];
             possible_moves[possible_moves_i].bitposition_from = move.from[1];
-            possible_moves[possible_moves_i].bitposition_to = move.from[1];
+            possible_moves[possible_moves_i].bitposition_to = move.to[1];
             possible_moves[possible_moves_i].move = move;
             translate_position(move.args, possible_moves_i++);
           }
@@ -148,7 +148,7 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   int turn_number = 0;
   int turn = 0;
   while (1) {
-    if (turn_number == 1000) {
+    if (turn_number == 500) {
       fprintf(stderr, "HIT MAX MOVE NUMBER... EXITING...\n");
       fclose(fp);
       exit(0);
@@ -165,10 +165,12 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
           // BLACK IS IN MATE
           fprintf(stderr, "BLACK IN MATE\n");
           write_to_file(1, fp);
+          return;
         } else {
           // WHITE IN MATE
           fprintf(stderr, "WHITE IN MATE\n");
           write_to_file(0, fp);
+          return;
         }
         return;
       } else {
@@ -207,10 +209,12 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
           // WHITE IN MATE
           fprintf(stderr, "WHITE IN MATE\n");
           write_to_file(0, fp);
+          return;
         } else {
           // BLACK IN MATE
           fprintf(stderr, "BLACK IN MATE\n");
           write_to_file(1, fp);
+          return;
         }
         return;
       } else {
