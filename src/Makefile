@@ -12,6 +12,7 @@ linux_libs = -L usr/lib/x86_64-linux-gnu/
 linux_include = -I ../include
 linux_link = -l:libglfw.so.3.3 -lGL -lX11 -l:libXrandr.so.2 -l:libXi.so.6 -ldl -lm -lcglm -lpthread
 
+.PHONY: linux
 linux:
 	gcc -Wall -g $(linux_include) $(linux_libs) -o 3DChessOp $(files) $(linux_link)
 	gcc -Wall -O3 $(linux_include) $(linux_libs) -o 3DChessOp $(files) $(linux_link)
@@ -21,6 +22,7 @@ output:
 	gcc -Wall -g $(linux_include) $(linux_libs) -o outreg $(files_output) $(linux_link)
 	gcc -Wall -O3 $(linux_include) $(linux_libs) -o outop $(files_output) $(linux_link)
 
+.PHONY: mac
 mac:
 	gcc -Wall -g -pthread $(mac_include) $(mac_libs) -o 3DChess glad.c legal_moves.c search2.0.c evaluate2.0.c frontend.c log2.c ps.c graphics_dependencies/*.o $(mac_link)
 #	gcc -Wall -O3 -pthread $(mac_include) $(mac_libs) -o 3DChessOp glad.c legal_moves.c search2.0.c evaluate2.0.c frontend.c log2.c ps.c graphics_dependencies/*.o $(mac_link)
@@ -34,7 +36,6 @@ tests:
 	gcc -Wall -O3 -pthread -I ../include -o 3DChess_check1_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check1.c log2.c ps.c
 	gcc -Wall -O3 -pthread -I ../include -o 3DChess_check2_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check2.c log2.c ps.c
 
-.PHONY: output
 all:
 	rm 3DChess*
 	gcc -Wall -O3 -pthread -I ../include -o 3DChess legal_moves.c search2.0.c evaluate2.0.c frontend.c log2.c ps.c

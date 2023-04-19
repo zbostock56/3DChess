@@ -157,7 +157,7 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
       // WHITE'S MOVE
       search_output(args, WHITE);
       fprintf(stderr, "MOVE NUMBER: %d\n", turn_number++);
-      //print_game(args);
+      print_game(args);
       //sleep(6);
       if (possible_moves_i == 1) {
         // MATE
@@ -201,8 +201,8 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
     } else {
       // BLACK'S MOVE
       search_output(args, BLACK);
-      //print_game(args);
-      //sleep(6);
+      print_game(args);
+     // sleep(6);
       if (possible_moves_i == 1) {
         // MATE
         if (possible_moves[0].result == 1) {

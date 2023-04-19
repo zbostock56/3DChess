@@ -12,3 +12,5 @@ void jump_check_detect(unsigned int *pos, uint64_t pl, uint64_t *piece_board,
                        uint64_t *output, unsigned int *double_check);
 void make_temp_copy(BOARD_ARGS *, BOARD_ARGS *);
 void make_move(BOARD_ARGS *, SIDE, TYPE, unsigned int *, unsigned int *);
+void printf_bitboards(uint64_t *b);
+void printf_bitboard(uint64_t b);

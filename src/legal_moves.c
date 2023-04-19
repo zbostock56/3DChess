@@ -470,7 +470,9 @@ void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
   //temp &= -temp;
   //temp &= ~boards[player][pos[0]];
   if (temp) {
-    closest_bit = log2_lookup(temp);
+    // WANT LEAST SIG BIT
+    //closest_bit = log2_lookup(temp);
+    closest_bit = temp & -temp;
     if (!((temp & -temp) & boards[player][pos[0]])) {
       // BEING ATTACKED
       attacks |= (ONE << closest_bit);
@@ -485,7 +487,9 @@ void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
     //temp &= -temp;
     //temp &= ~boards[player][pos[0]];
     if (temp) {
-      closest_bit = log2_lookup(temp);
+      // WANT LSB
+      //closest_bit = log2_lookup(temp);
+      closest_bit = temp & -temp;
       if (!((temp & -temp) & boards[player][pos[0]])) {
         attacks |= (ONE << closest_bit);
       }
@@ -541,7 +545,9 @@ void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
     //temp &= -temp;
     //temp &= ~boards[player][pos[0]];
     if (temp) {
-      closest_bit = log2_lookup(temp);
+      // WANT LSB
+      //closest_bit = log2_lookup(temp);
+      closest_bit = temp & -temp;
       if (!((temp & -temp) & boards[player][pos[0]])) {
         attacks |= (ONE << closest_bit);
       }
