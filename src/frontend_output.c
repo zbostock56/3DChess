@@ -28,7 +28,7 @@ void printf_bitboards(uint64_t *b) {
 }
 
 void printf_bitboard(uint64_t b) {
-  printf("%ld:\n", b);
+  printf("%lld:\n", b);
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       printf("1 ");
