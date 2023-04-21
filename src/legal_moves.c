@@ -1,7 +1,3 @@
-/*
-TODO: jump_check_detect not properly eliminating moves from pl
-*/
-
 #include <legal_moves.h>
 
 void get_legal(SIDE player, unsigned int *pos, TYPE type,

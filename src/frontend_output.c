@@ -1,4 +1,3 @@
-#include <psuedo_legal_moves.h>
 #include <frontend.h>
 
 BOARD_ARGS game;
@@ -28,7 +27,11 @@ void printf_bitboards(uint64_t *b) {
 }
 
 void printf_bitboard(uint64_t b) {
-  printf("%lld:\n", b);
+  #ifdef __linux__
+    printf("%ld:\n", b);
+  #elif __APPLE__
+    printf("%lld:\n", b);
+  #endif
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       printf("1 ");

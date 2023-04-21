@@ -22,11 +22,15 @@ void print_moves() {
     parent_cur = parent_move_list[i];
     if (cur.rating != 0) {
       printf("INDEX NUMBER: %d\n", i);
-      printf("SEARCH RETURNED MOVE:\nTO MOVE: %d\nFROM[0]: %d\nFROM[1]: %d\nTO[0]: %d\nTO[1]: %d\nSCORE: %d\nRATING: %u\n", cur.to_move,
-        cur.from[0], cur.from[1], cur.to[0], cur.to[1], cur.score, cur.rating);
-      printf("PARENT MOVE:\nTO MOVE: %d\nFROM[0]: %d\nFROM[1]: %d\nTO[0]: %d\nTO[1]: %d\nSCORE: %d\nRATING: %u\n\n", parent_cur.to_move,
-        parent_cur.from[0], parent_cur.from[1], parent_cur.to[0], parent_cur.to[1],
-        parent_cur.score, parent_cur.rating);
+      printf("SEARCH RETURNED MOVE:\nTO MOVE: %d\nFROM[0]: "
+              "%d\nFROM[1]: %d\nTO[0]: %d\nTO[1]: %d\nSCORE: %d\nRATING: %u\n",
+              cur.to_move, cur.from[0], cur.from[1], cur.to[0], cur.to[1],
+              cur.score, cur.rating);
+      printf("PARENT MOVE:\nTO MOVE: %d\nFROM[0]: "
+              "%d\nFROM[1]: %d\nTO[0]: %d\nTO[1]: %d\nSCORE: %d\nRATING: %u\n\n",
+              parent_cur.to_move, parent_cur.from[0], parent_cur.from[1],
+              parent_cur.to[0], parent_cur.to[1], parent_cur.score,
+              parent_cur.rating);
     }
   }
 }
@@ -55,7 +59,6 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   if ((player_flags & MATE) || (enemy_flags & MATE)) {
     return current;
   } else {
-    //for (int i = 5; i > -1; i--) {
     for (int i = 0; i < PIECE_TYPES; i++) {
         /*
           SELECT PIECE TYPE
@@ -106,7 +109,6 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
               parent_move_list[thread_num].args = &copy;
               pthread_create(threads + thread_num, NULL,
                               (void *) s_th_wrapper, (void *) &info);
-              //printf("Address of thread %d | %p\n", thread_num, threads + thread_num);
             }
           }
         }
@@ -123,7 +125,6 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
        printf("ERROR DETECTED IN THREAD %d | %d\n", j, s);
     }
     printf("Thread %d joined with code %d\n", j, s);
-    //printf("Thread ptr: %p\n", threads + thread_num);
   }
   printf("\nLISTING ALL MOVES:\n\n");
   print_moves();
@@ -175,13 +176,7 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   b_ret.to[0] = parent_move_list[best_index].to[0];
   b_ret.to[1] = parent_move_list[best_index].to[1];
   b_ret.to_move = to_move;
-  //printf("%p\n", b_ret.args);
-  //if (total_threads == 1) {
-  //  b_ret.args = ;
-  //}
-
   return b_ret;
-  //return best;
 }
 
 void s_th_wrapper(void *arg) {
@@ -193,11 +188,9 @@ void s_th_wrapper(void *arg) {
   pthread_exit(0);
 }
 
-long long stuff = 0;
+unsigned long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
             int alpha, int beta, unsigned int turn) {
-//MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth) {
-//MOVE search (void *arg) {
   SIDE enemy = to_move == WHITE ? BLACK : WHITE;
   uint32_t player_flags = 0;
   uint32_t enemy_flags = 0;
@@ -218,15 +211,11 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
   unsigned int current_position[2];
   unsigned int to_position[2];
   uint64_t junk[3];
-  //int order[5] = {3,4,1,2,5};
   /*
     BREAKS WHEN KING BEING EVALUATED ON BLACK AFTER MOVING TO TOP LEVEL
   */
   get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
-  //for (int i = 5; i > -1; i--) {
-  //int i = 0;
   for (int i = 0; i < PIECE_TYPES; i++) {
-  //u 
     /*
       SELECT PIECE TYPE
     */

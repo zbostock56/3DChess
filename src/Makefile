@@ -22,6 +22,11 @@ output:
 	gcc -Wall -g $(linux_include) $(linux_libs) -o outreg $(files_output) $(linux_link)
 	gcc -Wall -O3 $(linux_include) $(linux_libs) -o outop $(files_output) $(linux_link)
 
+.PHONY: object_output_mac
+object_output_mac:
+	gcc -Wall -g -save-temps $(mac_include) $(mac_libs) -c $(files_output) $(mac_link)
+	rm -rf *.dSYM
+
 .PHONY: output_mac
 output_mac:
 	gcc -Wall -g $(mac_include) $(mac_libs) -o outreg $(files_output) $(mac_link)
@@ -34,27 +39,6 @@ mac:
 	gcc -Wall -O3 $(mac_include) $(mac_libs) -o 3DChessOp $(files) $(mac_link)
 	rm -rf *.dSYM
 
-tests:
-	rm 3DChess*
-	gcc -Wall -g -pthread -I ../include -o 3DChess_start legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_start.c log2.c ps.c
-	gcc -Wall -g -pthread -I ../include -o 3DChess_check1 legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check1.c log2.c ps.c
-	gcc -Wall -g -pthread -I ../include -o 3DChess_check2 legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check2.c log2.c ps.c
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess_start_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_start.c log2.c ps.c
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess_check1_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check1.c log2.c ps.c
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess_check2_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check2.c log2.c ps.c
-
-all:
-	rm 3DChess*
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess legal_moves.c search2.0.c evaluate2.0.c frontend.c log2.c ps.c
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess legal_moves.c search2.0.c evaluate2.0.c frontend.c log2.c ps.c
-	gcc -Wall -g -pthread -I ../include -o 3DChess legal_moves.c search2.0.c evaluate2.0.c frontend.c log2.c ps.c
-	gcc -Wall -g -pthread -I ../include -o 3DChess_start legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_start.c log2.c ps.c
-	gcc -Wall -g -pthread -I ../include -o 3DChess_check1 legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check1.c log2.c ps.c
-	gcc -Wall -g -pthread -I ../include -o 3DChess_check2 legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check2.c log2.c ps.c
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess_start_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_start.c log2.c ps.c
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess_check1_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check1.c log2.c ps.c
-	gcc -Wall -O3 -pthread -I ../include -o 3DChess_check2_op legal_moves.c search2.0.c evaluate2.0.c ./board_configs/frontend_check2.c log2.c ps.c
-
 .PHONY: clean
 clean:
 	rm -f 3DChess
@@ -62,4 +46,7 @@ clean:
 	rm -f outreg
 	rm -f outop
 	rm -rf *.dSYM
-
+	rm -rf *.o
+	rm -rf *.i
+	rm -rf *.bc
+	rm -rf *.s

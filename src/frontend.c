@@ -1,6 +1,4 @@
-#include <psuedo_legal_moves.h>
 #include <frontend.h>
-#include <graphics_board_helpers.h>
 
 // GRAPHICS MECHANICS
 vec3 col_point = { 0.0, 0.0, 0.0 };
@@ -318,11 +316,6 @@ int main() {
   mat4 view = GLM_MAT4_IDENTITY_INIT;
   mat4 proj;
   glm_perspective(glm_rad(45.0), 800.0/600.0, 0.1, 100.0, proj);
-  /*printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
-         proj[0][0], proj[0][1], proj[0][2], proj[0][3],
-         proj[1][0], proj[1][1], proj[1][2], proj[1][3],
-         proj[2][0], proj[2][1], proj[2][2], proj[2][3],
-         proj[3][0], proj[3][1], proj[3][2], proj[3][3]);*/
   glUseProgram(piece_shader);
   glUniformMatrix4fv(glGetUniformLocation(piece_shader, "projection"), 1,
                      GL_FALSE, (float *) proj);
@@ -339,7 +332,6 @@ int main() {
   pthread_create(&g, NULL, (void *)(&play), NULL);
 
   while (!glfwWindowShouldClose(window)) {
-  //fprintf(stderr, "%f %f %f\n%f %f %f\npitch: %f\nyaw: %f\n", cam_pos[0], cam_pos[1], cam_pos[2], cam_front[0], cam_front[1], cam_front[2], pitch, yaw);
     if (change_ready == 1) {
       change_ready = 0;
       if (moved == 0) {
@@ -555,8 +547,6 @@ void keyboard_input(GLFWwindow *window) {
     glm_vec3_normalize(cam_front);
   }
 
-
-
   if ((glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) && (pressed == 0)) {
     if (active_board == 0) {
       active_board = 2;
@@ -630,10 +620,7 @@ void set_game_to_graphics(unsigned int *from, unsigned int *to) {
     piece_taken = game_board[to[0]][to[1]];
   }
   game_board[to[0]][to[1]] = temp;
-  // {forward/back, up/down, left/right}
   glm_vec3_copy(graphics_lookup[to[0]][to[1]], g_new_pos);
-  //fprintf(stderr, "\n***** g_new_pos: %f | %f | %f ******\n\n", 
-  //g_new_pos[0], g_new_pos[1], g_new_pos[2]);
   change_ready = 1;
 }
 
@@ -651,7 +638,11 @@ void print_bitboards(uint64_t *b, FILE *fp) {
 }
 
 void print_bitboard(uint64_t b, FILE *fp) {
-  fprintf(fp, "%ld:\n", b);
+  #ifdef __linx__
+    fprintf(fp, "%ld:\n", b);
+  #elif __APPLE__
+    fprintf(ld, "%lld:\n", b);
+  #endif
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       fprintf(fp, "1 ");
@@ -666,7 +657,11 @@ void print_bitboard(uint64_t b, FILE *fp) {
 }
 
 void printf_bitboard(uint64_t b) {
-  printf("%ld:\n", b);
+  #ifdef __linx__
+    printf("%ld:\n", b);
+  #elif __APPLE__
+    printf("%lld:\n", b);
+  #endif
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
       printf("1 ");

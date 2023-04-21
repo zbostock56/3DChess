@@ -1,13 +1,15 @@
-#include <stdint.h>
+#ifndef log2_h
+  #include <stdint.h>
 
-#define L(x) x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x
+  #define L(x) x, x, x, x, x, x, x, x, x, x, x, x, x, x, x, x
 
-const char lookup_table[] = {
- 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
- L(4), L(5), L(5), L(6), L(6), L(6), L(6),
- L(7), L(7), L(7), L(7), L(7), L(7), L(7), L(7),
- L(8), L(8), L(8), L(8), L(8), L(8), L(8), L(8),
- L(8), L(8), L(8), L(8), L(8), L(8), L(8), L(8)
-};
+  const char lookup_table[] = {
+   0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+   L(4), L(5), L(5), L(6), L(6), L(6), L(6),
+   L(7), L(7), L(7), L(7), L(7), L(7), L(7), L(7),
+   L(8), L(8), L(8), L(8), L(8), L(8), L(8), L(8),
+   L(8), L(8), L(8), L(8), L(8), L(8), L(8), L(8)
+  };
 
-unsigned int log2_lookup(uint64_t);
+  unsigned int log2_lookup(uint64_t);
+#endif

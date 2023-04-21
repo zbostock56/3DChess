@@ -1,4 +1,4 @@
-#include <psuedo_legal_moves.h>
+#include <main.h>
 
 //***START WHITE PAWNS***
 int w_pawn_len = 64;
