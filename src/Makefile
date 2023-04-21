@@ -27,7 +27,7 @@ endif
 
 .PHONY: default
 default:
-	gcc -Wall -g $(INCLUDE) $(LIBS) -o 3DChessOp $(FILES) $(LINK)
+	gcc -Wall -g $(INCLUDE) $(LIBS) -o 3DChess $(FILES) $(LINK)
 	gcc -Wall -O3 $(INCLUDE) $(LIBS) -o 3DChessOp $(FILES) $(LINK)
 	rm -rf *.dSYM
 
@@ -37,9 +37,14 @@ output:
 	gcc -Wall -O3 $(INCLUDE) $(LIBS) -o outop $(FILES_OUTPUT) $(LINK)
 	rm -rf *.dSYM
 
+.PHONY: compile
+compile: object
+	gcc -Wall -g $(INCLUDE) $(LIBS) -o outreg *.o $(LINK)
+	rm -rf *.dSYM
+
 .PHONY: object
 object:
-	gcc -Wall -g -save-temps $(INCLUDE) $(LIBS) -c $(FILES_OUTPUT) $(LINK)
+	gcc -Wall -g $(INCLUDE) $(LIBS) -c $(FILES_OUTPUT) $(LINK)
 	rm -rf *.dSYM
 
 .PHONY: clean

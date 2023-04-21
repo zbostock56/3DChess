@@ -50,6 +50,10 @@
       unsigned int depth, int alpha, int beta);
   #endif
 
+  #ifndef log2_h
+    unsigned int log2_lookup(uint64_t);
+  #endif
+
   // FRONTEND.H GLOBAL VARIABLES
   extern unsigned long long stuff;
 
