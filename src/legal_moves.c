@@ -12,18 +12,11 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
   SIDE enemy_t = player == WHITE ? BLACK : WHITE;
   uint64_t bishop_king = (BISHOP_PL + (5 * k_pos))[0];
   uint64_t rook_king = (ROOK_PL + (5 * k_pos))[0];
-  //printf_bitboard(bishop_king);
-  //printf_bitboard(rook_king);
   uint64_t bk_sa[3];
   uint64_t rk_sa[3];
 
   calc_sa(BISHOP, enemy_t, args.boards, args.k_pos[player], bk_sa);
   calc_sa(ROOK, enemy_t, args.boards, args.k_pos[player], rk_sa);
-
-  /*printf("BK SA\n");
-  printf_bitboards(bk_sa);
-  printf("RK SA\n");
-  printf_bitboards(rk_sa);*/
 
   unsigned int double_check = 0;
   uint64_t in_check;
@@ -242,11 +235,6 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
       output[TOP] &= total_check[TOP];
       output[MIDDLE] &= total_check[MIDDLE];
       output[BOTTOM] &= total_check[BOTTOM];
-      //if ((total_check[TOP] & ~output[TOP]) || (total_check[MIDDLE] & ~output[MIDDLE]) || (total_check[BOTTOM] & ~output[BOTTOM])) {
-      //  output[TOP] = 0;
-      //  output[MIDDLE] = 0;
-      //  output[BOTTOM] = 0;
-      //}
     }
     return;
   } else {
@@ -282,11 +270,6 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
           output[MIDDLE] = sa[type][MIDDLE];
           output[BOTTOM] = sa[type][BOTTOM];
         }
-        //if ((total_check[TOP] & ~output[TOP]) || (total_check[MIDDLE] & ~output[MIDDLE]) || (total_check[BOTTOM] & ~output[BOTTOM])) {
-        //  output[TOP] = 0;
-        //  output[MIDDLE] = 0;
-        //  output[BOTTOM] = 0;
-        //}
         return;
       }
 
@@ -326,11 +309,6 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
           output[MIDDLE] = sa[type][MIDDLE];
           output[BOTTOM] = sa[type][BOTTOM];
         }
-        //if ((total_check[TOP] & ~output[TOP]) || (total_check[MIDDLE] & ~output[MIDDLE]) || (total_check[BOTTOM] & ~output[BOTTOM])) {
-        //  output[TOP] = 0;
-        //  output[MIDDLE] = 0;
-        //  output[BOTTOM] = 0;
-        //}
         return;
       }
 
@@ -419,11 +397,6 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
         output[BOTTOM] = sa[type][BOTTOM];
       }
     }
-    //if ((total_check[TOP] & ~output[TOP]) || (total_check[MIDDLE] & ~output[MIDDLE]) || (total_check[BOTTOM] & ~output[BOTTOM])) {
-    //  output[TOP] = 0;
-    //  output[MIDDLE] = 0;
-    //  output[BOTTOM] = 0;
-    //}
   }
 }
 
@@ -463,92 +436,65 @@ void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
   uint64_t up = sa[pos[0]] & pl[1];
   uint64_t temp = ~sa[pos[0]] & pl[1];
   // GET LEAST SIG BIT IN THE FORM OF A BITBOARD
-  //temp &= -temp;
-  //temp &= ~boards[player][pos[0]];
   if (temp) {
     // WANT LEAST SIG BIT
-    //closest_bit = log2_lookup(temp);
     closest_bit = temp & -temp;
     if (!((temp & -temp) & boards[player][pos[0]])) {
       // BEING ATTACKED
       attacks |= (ONE << closest_bit);
     }
-    up &= UPPER_ZERO >> (63 - /*log2_lookup(temp & -temp)*/closest_bit);
-    //attacks |= up & boards[enemy_t][pos[0]];
+    up &= UPPER_ZERO >> (63 - closest_bit);
   }
 
   uint64_t right = sa[pos[0]] & pl[2];
   temp = ~sa[pos[0]] & pl[2];
   if (type == BISHOP) {
-    //temp &= -temp;
-    //temp &= ~boards[player][pos[0]];
     if (temp) {
       // WANT LSB
-      //closest_bit = log2_lookup(temp);
       closest_bit = temp & -temp;
       if (!((temp & -temp) & boards[player][pos[0]])) {
         attacks |= (ONE << closest_bit);
       }
-      right &= UPPER_ZERO >> (63 - /*log2_lookup(temp & -temp)*/closest_bit);
-      //attacks |= right & boards[enemy_t][pos[0]];
+      right &= UPPER_ZERO >> (63 - closest_bit);
     }
   } else {
-    //if (temp) {
-    //  temp = (ONE << log2_lookup(temp));
-    //}
-    //temp &= ~boards[player][pos[0]];
     if (temp) {
       closest_bit = log2_lookup(temp);
       if (!((ONE << closest_bit) & boards[player][pos[0]])) {
         attacks |= (ONE << closest_bit);
       }
-      right &= LOWER_ZERO << closest_bit/*log2_lookup(temp)*/;
-      //attacks |= right & boards[enemy_t][pos[0]];
+      right &= LOWER_ZERO << closest_bit;
     }
   }
 
   uint64_t down = sa[pos[0]] & pl[3];
   temp = ~sa[pos[0]] & pl[3];
-  //if (temp) {
-  //  temp = (ONE << log2_lookup(temp));
-  //}
-  //temp &= ~boards[player][pos[0]];
   if (temp) {
     closest_bit = log2_lookup(temp);
     if (!((ONE << closest_bit) & boards[player][pos[0]])) {
       attacks |= (ONE << closest_bit);
     }
-    down &= LOWER_ZERO << closest_bit/*log2_lookup(temp)*/;
-    //attacks |= down & boards[enemy_t][pos[0]];
+    down &= LOWER_ZERO << closest_bit;
   }
 
   uint64_t left = sa[pos[0]] & pl[4];
   temp = ~sa[pos[0]] & pl[4];
   if (type == BISHOP) {
-    //if (temp) {
-    //  temp = (ONE << log2_lookup(temp));
-    //}
-    //temp &= ~boards[player][pos[0]];
     if (temp) {
       closest_bit = log2_lookup(temp);
       if (!((ONE << closest_bit) & boards[player][pos[0]])) {
         attacks |= (ONE << closest_bit);
       }
-      left &= LOWER_ZERO << closest_bit/*log2_lookup(temp)*/;
-      //attacks |= left & boards[enemy_t][pos[0]];
+      left &= LOWER_ZERO << closest_bit;
     }
   } else {
-    //temp &= -temp;
-    //temp &= ~boards[player][pos[0]];
     if (temp) {
       // WANT LSB
-      //closest_bit = log2_lookup(temp);
       closest_bit = temp & -temp;
       if (!((temp & -temp) & boards[player][pos[0]])) {
         attacks |= (ONE << closest_bit);
       }
-      left &= UPPER_ZERO >> (63 - closest_bit/*log2_lookup(temp & -temp)*/);
-      //attacks |= left & boards[enemy_t][pos[0]];
+      left &= UPPER_ZERO >> (63 - closest_bit);
     }
   }
 
