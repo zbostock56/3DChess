@@ -154,7 +154,7 @@ void reset_possible_moves() {
 
 void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   srand(random_val_gen());
-  FILE *fp = fopen("output.csv", "a+");
+  FILE *fp = fopen("output2.csv", "a+");
   int turn_number = 0;
   int turn = 0;
   while (1) {
@@ -355,9 +355,9 @@ void write_to_file(int result, FILE *fp) {
       for (int j = 0; j < 192; j++) {
         fprintf(fp, "%d", chosen_moves[i].position[j]);
       }
-      fprintf(fp, ",%u,%u,%u,%u,%d\n", chosen_moves[i].level_from,
-              chosen_moves[i].bitposition_from, chosen_moves[i].level_to,
-              chosen_moves[i].bitposition_to, 1);
+      int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
+      int to = ((chosen_moves[i].level_to) * 63) + (chosen_moves[i].bitposition_to);
+      fprintf(fp, ",%d,%d,%d\n", from, to, 1);
     }
   } else {
     // GAME WAS A LOSS
@@ -365,9 +365,9 @@ void write_to_file(int result, FILE *fp) {
       for (int j = 0; j < 192; j++) {
         fprintf(fp, "%d", chosen_moves[i].position[j]);
       }
-      fprintf(fp, ",%u,%u,%u,%u,%d\n", chosen_moves[i].level_from,
-              chosen_moves[i].bitposition_from, chosen_moves[i].level_to,
-              chosen_moves[i].bitposition_to, 0);
+      int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
+      int to = ((chosen_moves[i].level_to) * 63) + (chosen_moves[i].bitposition_to);
+      fprintf(fp, ",%d,%d,%d\n", from, to, 0);
     }
   }
   fclose(fp);
