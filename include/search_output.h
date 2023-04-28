@@ -1,6 +1,7 @@
 #ifndef search_output_h
   #define search_output_h
   #include <time.h>
+  #include <sys/time.h>
   //#ifndef log2_h
   //  #include <log2.h>
   //#endif
@@ -21,6 +22,7 @@
   void output_to_file(BOARD_ARGS *args, SIDE to_move);
   void write_to_file(int result, FILE *fp);
   void print_game(BOARD_ARGS *args);
+  unsigned int random_val_gen();
 
   #ifndef log2_h
     unsigned int log2_lookup(uint64_t);

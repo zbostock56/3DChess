@@ -32,7 +32,17 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
   unsigned int to_position[2];
   uint64_t junk[3];
   get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
+  if (enemy_flags & CHECK) {
+    //printf("\n\nCURRENT GAME CONFIG\n\n");
+    //print_game(args);
+    get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
+  }
   get_legal(to_move, args->k_pos[to_move], KING, *args, junk, &player_flags);
+  if (player_flags & CHECK) {
+    //printf("\n\nCURRENT GAME CONFIG\n\n");
+    //print_game(args);
+    get_legal(to_move, args->k_pos[to_move], KING, *args, junk, &player_flags);
+  }
   if ((enemy_flags & MATE) == 1) {
     possible_moves_i = 0;
     possible_moves[possible_moves_i].result = 1;
@@ -143,13 +153,14 @@ void reset_possible_moves() {
 }
 
 void output_to_file(BOARD_ARGS *args, SIDE to_move) {
-  srand(time(0));
+  srand(random_val_gen());
   FILE *fp = fopen("output.csv", "a+");
   int turn_number = 0;
   int turn = 0;
   while (1) {
     if (turn_number == 500) {
       fprintf(stderr, "HIT MAX MOVE NUMBER... EXITING...\n");
+     // fprintf(stderr, "random_val_gen(): %u\n", random_val_gen());
       fclose(fp);
       exit(0);
     }
@@ -157,7 +168,8 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
       // WHITE'S MOVE
       search_output(args, WHITE);
       fprintf(stderr, "MOVE NUMBER: %d\n", turn_number++);
-      print_game(args);
+      //fprintf(stderr, "WHITE'S MOVE\n");
+      //print_game(args);
       //sleep(6);
       if (possible_moves_i == 1) {
         // MATE
@@ -195,13 +207,17 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
           type = KING;
         }
         make_move(args, WHITE, type, from, to);
+        //printf("from[0] %u\nfrom[1] %u\nto[0]"
+        //" %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+        //print_game(args);
         reset_possible_moves();
       }
       turn = 1;
     } else {
       // BLACK'S MOVE
       search_output(args, BLACK);
-      print_game(args);
+      //fprintf(stderr, "BLACK'S MOVE\n");
+      //print_game(args);
      // sleep(6);
       if (possible_moves_i == 1) {
         // MATE
@@ -238,6 +254,9 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
           type = KING;
         }
         make_move(args, BLACK, type, from, to);
+        //printf("from[0] %u\nfrom[1] %u\nto[0]"
+        //" %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
+        //print_game(args);
         reset_possible_moves();
         turn = 0;
       }
@@ -352,4 +371,11 @@ void write_to_file(int result, FILE *fp) {
     }
   }
   fclose(fp);
+}
+
+unsigned int random_val_gen() {
+    struct timeval tv;
+    gettimeofday(&tv,NULL);
+    long long state = (((long long) tv.tv_sec) * 1000) + (tv.tv_usec / 1000);
+    return (unsigned int) state;
 }

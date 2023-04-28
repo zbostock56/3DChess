@@ -638,7 +638,7 @@ void print_bitboards(uint64_t *b, FILE *fp) {
 }
 
 void print_bitboard(uint64_t b, FILE *fp) {
-  #ifdef __linx__
+  #ifdef __linux__
     fprintf(fp, "%ld:\n", b);
   #elif __APPLE__
     fprintf(ld, "%lld:\n", b);
@@ -657,7 +657,7 @@ void print_bitboard(uint64_t b, FILE *fp) {
 }
 
 void printf_bitboard(uint64_t b) {
-  #ifdef __linx__
+  #ifdef __linux__
     printf("%ld:\n", b);
   #elif __APPLE__
     printf("%lld:\n", b);

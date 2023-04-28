@@ -41,6 +41,7 @@ output:
 compile: object
 	gcc -Wall -g $(INCLUDE) $(LIBS) -o outreg *.o $(LINK)
 	rm -rf *.dSYM
+	rm -rf *.o
 
 .PHONY: object
 object:

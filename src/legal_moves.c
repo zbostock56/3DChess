@@ -12,34 +12,35 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
   SIDE enemy_t = player == WHITE ? BLACK : WHITE;
   uint64_t bishop_king = (BISHOP_PL + (5 * k_pos))[0];
   uint64_t rook_king = (ROOK_PL + (5 * k_pos))[0];
-  uint64_t bk_sa[3];
-  uint64_t rk_sa[3];
+  uint64_t bk_sa[3] = { 0, 0, 0 };
+  uint64_t rk_sa[3] = { 0, 0, 0 };
 
   calc_sa(BISHOP, enemy_t, args.boards, args.k_pos[player], bk_sa);
   calc_sa(ROOK, enemy_t, args.boards, args.k_pos[player], rk_sa);
 
   unsigned int double_check = 0;
-  uint64_t in_check;
+  uint64_t in_check = 0;
   uint64_t d_check[3] = { 0, 0, 0 };
-  slider_check_detect(bk_sa, bishop_king, BISHOP_PL, args.k_pos[player],
-                      args.d_sliders[enemy_t], d_check, &double_check);
-
   uint64_t hv_check[3] = { 0, 0, 0 };
-  slider_check_detect(rk_sa, rook_king, ROOK_PL, args.k_pos[player],
-                      args.hv_sliders[enemy_t], hv_check, &double_check);
-
   uint64_t jp_check[3] = { 0, 0, 0 };
   uint64_t jn_check[3] = { 0, 0, 0 };
+  uint64_t kp_enemies[3] = { 0, 0, 0 };
+  uint64_t kn_enemies[3] = { 0, 0, 0 };
   uint64_t p_attack = player == WHITE ? W_PAWN_ATTACK[args.k_pos[player][1]] :
                                        B_PAWN_ATTACK[args.k_pos[player][1]];
-  uint64_t kp_enemies[3];
-  uint64_t kn_enemies[3];
+  uint64_t total_check[3] = { 0, 0, 0 };
+
   kp_enemies[TOP] = args.piece_boards[enemy_t][PAWN][TOP];
   kp_enemies[MIDDLE] = args.piece_boards[enemy_t][PAWN][MIDDLE];
   kp_enemies[BOTTOM] = args.piece_boards[enemy_t][PAWN][BOTTOM];
   kn_enemies[TOP] = args.piece_boards[enemy_t][KNIGHT][TOP];
   kn_enemies[MIDDLE] = args.piece_boards[enemy_t][KNIGHT][MIDDLE];
   kn_enemies[BOTTOM] = args.piece_boards[enemy_t][KNIGHT][BOTTOM];
+
+  slider_check_detect(bk_sa, bishop_king, BISHOP_PL, args.k_pos[player],
+                      args.d_sliders[enemy_t], d_check, &double_check);
+  slider_check_detect(rk_sa, rook_king, ROOK_PL, args.k_pos[player],
+                      args.hv_sliders[enemy_t], hv_check, &double_check);
 
   jump_check_detect(args.k_pos[player],
                     KNIGHT_PL[args.k_pos[player][1]], kn_enemies,
@@ -48,12 +49,10 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
                     p_attack, kp_enemies,
                     jp_check, &double_check);
 
-  uint64_t total_check[3] = { 0, 0, 0 };
   total_check[TOP] = d_check[TOP] | hv_check[TOP] | jp_check[TOP] | jn_check[TOP];
   total_check[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE] | jp_check[MIDDLE] | jn_check[MIDDLE];
   total_check[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] | jp_check[BOTTOM] | jn_check[BOTTOM];
   in_check = total_check[TOP] | total_check[MIDDLE] | total_check[BOTTOM];
-
 
   // SET CHECK FLAGS
   uint64_t warning_board[3] = { 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff };
@@ -66,6 +65,15 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
     BOARD_ARGS copy;
     // KING
     if (*flags & CHECK) {
+
+      /*
+        CHECK IF MOVING TO THE SQUARE THAT IS ATTACKING THE KING
+        WILL RESOLVE THE CHECK
+
+        ONLY IS CHECKED IF KING IS ALREADY IN CHECK. OTHERWISE,
+        SKIP TO NORMAL CHECKS
+      */
+
       uint64_t bc_sa[3];
       uint64_t rc_sa[3];
       uint64_t check_bishop;
@@ -102,6 +110,8 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
           t_check[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE] | jp_check[MIDDLE] | jn_check[MIDDLE];
           t_check[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] | jp_check[BOTTOM] | jn_check[BOTTOM];
           if (t_check[TOP] | t_check[MIDDLE] | t_check[BOTTOM]) {
+            // IF THIS DOESN'T RESOLVE THE CHECK, REMOVE IT FROM
+            // THE CHANCES OF MOVING THERE
             warning_board[i] ^= (ONE << c_pos);
           }
         }
@@ -112,74 +122,148 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
     uint64_t pl = KING_PL[pos[1]];
     unsigned int s_pos;
     unsigned int coord[2];
+    // SET THE LEVEL TO THE CURRENT LEVEL THAT THE KING IS ON
     coord[0] = pos[0];
 
+    /*
+      CHECK WHICH SPACES THE KING CAN MOVE TO.
+
+      INDIVIDUALLY SELECT ONE OF ITS PL ON THE CURRENT LEVEL
+      AND CHECK IF IT WOULD BE CAPTURED IF MOVED THERE
+    */
+
+    /*
+      BEFORE CHECKING MOVES, REMOVE ONES WHERE FRIEND PIECES ARE
+      ON THE LEVEL THE KING IS ON
+    */
+
+    pl &= ~args.boards[player][pos[0]];
     while (pl) {
       s_pos = log2_lookup(pl);
       pl ^= (ONE << s_pos);
+      uint64_t pl_move_poss[3] = { 0, 0, 0 };
+      uint64_t d_check[3] = { 0, 0, 0 };
+      uint64_t hv_check[3] = { 0, 0, 0 };
+      uint64_t jp_check[3] = { 0, 0, 0 };
+      uint64_t jn_check[3] = { 0, 0, 0 };
+      uint64_t kp_enemies[3] = { 0, 0, 0 };
+      uint64_t kn_enemies[3] = { 0, 0, 0 };
+      uint64_t p_attack = player == WHITE ? W_PAWN_ATTACK[s_pos] :
+                                    B_PAWN_ATTACK[s_pos];
+      bishop_king = (BISHOP_PL + (5 * s_pos))[0];
+      rook_king = (ROOK_PL + (5 * s_pos))[0];
 
+      // GET BITPOSITIONS OF PL MOVE
       coord[1] = s_pos;
       make_temp_copy(&args, &copy);
+      // MAKE MOVE AND CHECK IF CAPTURE IS POSSIBLE OF THE KING
       make_move(&copy, player, KING, args.k_pos[player], coord);
       calc_sa(BISHOP, enemy_t, copy.boards, coord, sa[BISHOP]);
       calc_sa(ROOK, enemy_t, copy.boards, coord, sa[ROOK]);
+      slider_check_detect(sa[BISHOP], bishop_king, BISHOP_PL, coord,
+                          args.d_sliders[enemy_t], d_check, &double_check);
+      slider_check_detect(sa[ROOK], rook_king, ROOK_PL, coord,
+                          args.hv_sliders[enemy_t], hv_check, &double_check);
+      jump_check_detect(coord, KNIGHT_PL[s_pos], kn_enemies,
+                        jn_check, &double_check);
+      jump_check_detect(coord, p_attack, kp_enemies,
+                        jp_check, &double_check);
 
-      if (sa[BISHOP][pos[0]] & args.d_sliders[enemy_t][pos[0]] ||
-          sa[ROOK][pos[0]] & args.hv_sliders[enemy_t][pos[0]]) {
+      pl_move_poss[TOP] = d_check[TOP] | hv_check[TOP] | jp_check[TOP] | jn_check[TOP];
+      pl_move_poss[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE] | jp_check[MIDDLE] | jn_check[MIDDLE];
+      pl_move_poss[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] | jp_check[BOTTOM] | jn_check[BOTTOM];
+      //if (sa[BISHOP][pos[0]] & args.d_sliders[enemy_t][pos[0]] ||
+      //    sa[ROOK][pos[0]] & args.hv_sliders[enemy_t][pos[0]]) {
+      if (pl_move_poss[TOP] | pl_move_poss[MIDDLE] | pl_move_poss[BOTTOM]) {
         under_attack[coord[0]] |= (ONE << coord[1]);
       }
     }
 
     coord[1] = pos[1];
+    // REMOVE ALL POSITIONS FOUND TO PUT THE KING INTO CHECK
     output[pos[0]] = under_attack[pos[0]] ^ KING_PL[pos[1]];
+    /*
+      NOW CHECK IF THE KING CAN MOVE UP OR DOWN DEPENDING ON ITS POSITION.
+      IF MOVE WOULD BE UNDER ATTACK, REMOVE IT FROM OUTPUT
+    */
+
+      uint64_t pl_move_level_poss[3] = { 0, 0, 0 };
+      uint64_t d_check[3] = { 0, 0, 0 };
+      uint64_t hv_check[3] = { 0, 0, 0 };
+      uint64_t jp_check[3] = { 0, 0, 0 };
+      uint64_t jn_check[3] = { 0, 0, 0 };
+      uint64_t kp_enemies[3] = { 0, 0, 0 };
+      uint64_t kn_enemies[3] = { 0, 0, 0 };
+      uint64_t p_attack = player == WHITE ? W_PAWN_ATTACK[args.k_pos[player][1]] :
+                                    B_PAWN_ATTACK[args.k_pos[player][1]];
+      bishop_king = (BISHOP_PL + (5 * k_pos))[0];
+      rook_king = (ROOK_PL + (5 * k_pos))[0];
+
     if (pos[0] == TOP) {
       coord[0] = MIDDLE;
-      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
-      if (sa[BISHOP][pos[0]] & args.d_sliders[enemy_t][pos[0]] ||
-          sa[ROOK][pos[0]] & args.hv_sliders[enemy_t][pos[0]]) {
+      make_temp_copy(&args, &copy);
+      // MAKE MOVE AND CHECK IF CAPTURE IS POSSIBLE OF THE KING
+      // PREPROCESSOR DIRECTIVE: LEGAL_MOVES.H
+      check_level();
+
+      if (pl_move_level_poss[TOP] | pl_move_level_poss[MIDDLE] | pl_move_level_poss[BOTTOM]) {
+        // PIECE ON MIDDLE LEVEL THAT CAN ATTACK FROM ANOTHER SQUARE
         under_attack[MIDDLE] |= (ONE << pos[1]);
       }
       if (args.boards[enemy_t][BOTTOM] & LEVELS[pos[1]]) {
+        // PIECE ON BOTTOM LEVEL THAT CAN COME UP AND ATTACK
         under_attack[MIDDLE] |= LEVELS[pos[1]];
       }
       output[MIDDLE] = (ONE << pos[1]) ^ under_attack[MIDDLE];
       output[BOTTOM] = 0;
     } else if (pos[0] == MIDDLE) {
       coord[0] = TOP;
-      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
-      if (sa[BISHOP][pos[0]] & args.d_sliders[enemy_t][pos[0]] ||
-          sa[ROOK][pos[0]] & args.hv_sliders[enemy_t][pos[0]]) {
+      // PREPROCESSOR DIRECTIVE: LEGAL_MOVES.H
+      check_level();
+
+      if (pl_move_level_poss[TOP] | pl_move_level_poss[MIDDLE] | pl_move_level_poss[BOTTOM]) {
+        // PIECE ON TOP LEVEL THAT CAN ATTACK FROM ANOTHER SQUARE
         under_attack[TOP] |= (ONE << pos[1]);
       }
       output[TOP] = (ONE << pos[1]) ^ under_attack[TOP];
 
       coord[0] = BOTTOM;
-      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
-      if (sa[BISHOP][pos[0]] & args.d_sliders[enemy_t][pos[0]] ||
-          sa[ROOK][pos[0]] & args.hv_sliders[enemy_t][pos[0]]) {
+      // PREPROCESSOR DIRECTIVE: LEGAL_MOVES.H
+      check_level();
+      if (pl_move_level_poss[TOP] | pl_move_level_poss[MIDDLE] | pl_move_level_poss[BOTTOM]) {
+        // PIECE ON BOTTOM LEVEL THAT CAN ATTACK FROM ANOTHER SQUARE
         under_attack[BOTTOM] |= (ONE << pos[1]);
       }
       output[BOTTOM] = (ONE << pos[1]) ^ under_attack[BOTTOM];
     } else {
       coord[0] = MIDDLE;
-      calc_sa(BISHOP, enemy_t, args.boards, coord, sa[BISHOP]);
-      calc_sa(ROOK, enemy_t, args.boards, coord, sa[ROOK]);
-      if (sa[BISHOP][pos[0]] & args.d_sliders[enemy_t][pos[0]] ||
-          sa[ROOK][pos[0]] & args.hv_sliders[enemy_t][pos[0]]) {
+      // PREPROCESSOR DIRECTIVE: LEGAL_MOVES.H
+      check_level();
+
+      if (pl_move_level_poss[TOP] | pl_move_level_poss[MIDDLE] | pl_move_level_poss[BOTTOM]) {
+        // PIECE ON TOP LEVEL THAT CAN ATTACK FROM ANOTHER SQUARE
         under_attack[MIDDLE] |= (ONE << pos[1]);
       }
       if (args.boards[enemy_t][TOP] & LEVELS[pos[1]]) {
+        // PIECE ON TOP LEVEL THAT CAN COME UP AND ATTACK
         under_attack[MIDDLE] |= LEVELS[pos[1]];
       }
       output[MIDDLE] = (ONE << pos[1]) ^ under_attack[MIDDLE];
       output[TOP] = 0;
     }
+
+    /*
+      REMOVE AWAY THE FRIENDS FROM THE THREE LEVELS
+    */
+
     output[TOP] &= ~args.boards[player][TOP];
     output[MIDDLE] &= ~args.boards[player][MIDDLE];
     output[BOTTOM] &= ~args.boards[player][BOTTOM];
+
+    /*
+      REMOVE THE ABILITY TO MOVE INTO SQUARES OF HARM
+    */
+
     output[TOP] &= warning_board[TOP];
     output[MIDDLE] &= warning_board[MIDDLE];
     output[BOTTOM] &= warning_board[BOTTOM];
@@ -262,9 +346,9 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
       if (((bishop_king & cur) == 0) && ((rook_king & cur) == 0)) {
         // NOT IN DISC CHECK
         if (in_check) {
-          output[TOP] = total_check[TOP] & sa[type][TOP]; 
-          output[MIDDLE] = total_check[MIDDLE] & sa[type][MIDDLE]; 
-          output[BOTTOM] = total_check[BOTTOM] & sa[type][BOTTOM]; 
+          output[TOP] = total_check[TOP] & sa[type][TOP];
+          output[MIDDLE] = total_check[MIDDLE] & sa[type][MIDDLE];
+          output[BOTTOM] = total_check[BOTTOM] & sa[type][BOTTOM];
         } else {
           output[TOP] = sa[type][TOP];
           output[MIDDLE] = sa[type][MIDDLE];
