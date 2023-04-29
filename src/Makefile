@@ -48,6 +48,10 @@ object:
 	gcc -Wall -g $(INCLUDE) $(LIBS) -c $(FILES_OUTPUT) $(LINK)
 	rm -rf *.dSYM
 
+.PHONY: line_changer
+line_changer:
+	gcc -O3 -o line_changer line_changer.c
+
 .PHONY: clean
 clean:
 	rm -f 3DChess
