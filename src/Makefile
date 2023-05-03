@@ -50,7 +50,7 @@ object:
 
 .PHONY: line_changer
 line_changer:
-	gcc -O3 -o line_changer line_changer.c
+	gcc -O3 -o line_changer ./model/line_changer.c
 
 .PHONY: clean
 clean:
@@ -58,6 +58,7 @@ clean:
 	rm -f 3DChessOp
 	rm -f outreg
 	rm -f outop
+	rm -f ./model/line_changer
 	rm -rf *.dSYM
 	rm -rf *.o
 	rm -rf *.i
