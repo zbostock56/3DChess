@@ -154,7 +154,7 @@ void reset_possible_moves() {
 
 void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   srand(random_val_gen());
-  FILE *fp = fopen("output2.csv", "a+");
+  FILE *fp = fopen("output.csv", "a+");
   int turn_number = 0;
   int turn = 0;
   while (1) {

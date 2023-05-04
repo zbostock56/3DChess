@@ -50,7 +50,11 @@ object:
 
 .PHONY: line_changer
 line_changer:
-	gcc -O3 -o line_changer ./model/line_changer.c
+	gcc -O3 -g -o line_changer ./model/line_changer.c
+
+.PHONY: man_eval
+man_eval:
+	gcc -O3 -g $(INCLUDE) -o man_eval ./model/man_eval.c
 
 .PHONY: clean
 clean:
@@ -58,7 +62,8 @@ clean:
 	rm -f 3DChessOp
 	rm -f outreg
 	rm -f outop
-	rm -f ./model/line_changer
+	rm -f line_changer
+	rm -f man_eval
 	rm -rf *.dSYM
 	rm -rf *.o
 	rm -rf *.i

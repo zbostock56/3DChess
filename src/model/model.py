@@ -7,7 +7,6 @@ from tensorflow.keras import layers
 from sklearn import datasets
 from datetime import datetime
 
-#class_names=["Position, Level_from, Bitposition_from, Level_to, Bitposition_to,Result"]
 data = pd.read_csv("~/Projects/part1_o2test.csv")
 
 # Set seed for random number generation
@@ -50,8 +49,7 @@ y_test = np.asarray(y_test).astype(np.float64)
 
 model = tf.keras.Sequential([
   #keras.layers.Input(shape=(3,)),
-  keras.layers.Dense(250, activation="relu"),
- # keras.layers.Dense(5000, activation="relu"),
+ keras.layers.Dense(5000, activation="relu"),
  # keras.layers.Dense(4000, activation="relu"),
  # keras.layers.Dense(3000, activation="relu"),
  # keras.layers.Dense(2500, activation="relu"),
