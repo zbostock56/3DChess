@@ -4,17 +4,13 @@ from torch import optim # optimizers
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pathlib import Path # Save/Load Model
 
 # Check PyTorch Version
 print(f"PyTorch Version: {torch.__version__}")
 
-device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
+# Device agnostic setup
+device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
 # Create Data
@@ -23,6 +19,8 @@ bias = 0.3
 start = 0
 end = 1
 step = 0.0001
+# X = features
+# y = labels
 X = torch.arange(start, end, step).unsqueeze(dim=1)
 y = weight * X + bias
 
@@ -35,6 +33,12 @@ def plot_predictions(train_data=X_train,
                      test_data=X_test,
                      test_labels=y_test,
                      predictions=None):
+  # Change to CPU for matplotlib requirements
+  train_data = train_data.to("cpu")
+  train_labels = train_labels.to("cpu")
+  test_data = test_data.to("cpu")
+  test_labels = test_labels("cpu")
+
   plt.figure(figsize = (10, 7))
 
   # Plot training data in blue
@@ -45,7 +49,8 @@ def plot_predictions(train_data=X_train,
 
   if predictions is not None:
     # Plot the predictions
-    plt.scatter(test_data, predictions, c="r", s = 4, label = "Predictions")
+    predictions = predictions.to("cpu")
+    plt.scatter(test_data, predictions, c = "r", s = 4, label = "Predictions")
 
   plt.legend(prop = {"size": 14})
   plt.show()
@@ -56,28 +61,95 @@ class NeuralNetwork(nn.Module):
     super().__init__()
 
     # Model Parameters
-    # requires_grad = true =====> use gradient descent
-    self.weights = nn.Parameter(torch.randn(1,
-                                            requires_grad = True,
-                                            dtype = torch.float32))
-    self.bias = nn.Parameter(torch.randn(1,
-                                         requires_grad = True,
-                                         dtype = torch.float32))
-
+    self.linear_layer = nn.Linear(in_features = 1,
+                                  out_features = 1)
     # Define the computation in the model
   def forward(self, x: torch.Tensor) -> torch.Tensor:
-    return self.weights * x + self.bias
-
-# Create a manual random seed
-torch.manual_seed(42)
+    return self.linear_layer(x)
 
 # Instance of the model
 model = NeuralNetwork()
+model.to(device)
+print(f"Set model to run on correct device: {next(model.parameters()).device}")
 
-# Make predictions with model
-with torch.inference_mode():
-  y_preds = model(X_test)
+# Put data on the correct device
+X_train = X_train.to(device)
+y_train = y_train.to(device)
+X_test = X_train.to(device)
+y_test = y_train.to(device)
+print(f"Set data to run on correct device: {device}")
 
-print(y_preds)
+epochs = 1000
+lossfn = nn.L1Loss()
+optimizer = optim.SGD(params = model.parameters(),
+                      lr = 0.01)
 
-plot_predictions(predictions=y_preds);
+# Create empty loss lists to track values
+train_loss_values = []
+test_loss_values = []
+epoch_count = []
+
+for epoch in range(epochs):
+    # Set to train mode
+    model.train()
+
+    # Forward pass on train data
+    y_pred = model(X_train)
+
+    # Calculate the loss
+    loss = lossfn(y_pred, y_train)
+
+    # Zero grad of the optimizer
+    optimizer.zero_grad()
+
+    # Backpropagation
+    loss.backward()
+
+    # Progress the optimizer
+    optimizer.step()
+
+    # Put the model in evaluation mode
+    model.eval()
+
+    with torch.inference_mode():
+      # Forward pass on test data
+      test_pred = model(X_test)
+
+      # Caculate loss on test data
+      test_loss = lossfn(test_pred, y_test.type(torch.float)) # predictions come in torch.float datatype, so comparisons need to be done with tensors of the same type
+
+      if epoch % 10 == 0:
+            epoch_count.append(epoch)
+            train_loss_values.append(loss.detach().numpy())
+            test_loss_values.append(test_loss.detach().numpy())
+            print(f"Epoch: {epoch} | Loss: {loss} | Test Loss: {test_loss} ")
+
+"""
+plt.plot(epoch_count, train_loss_values, label="Train loss")
+plt.plot(epoch_count, test_loss_values, label="Test loss")
+plt.title("Training and test loss curves")
+plt.ylabel("Loss")
+plt.xlabel("Epochs")
+plt.legend();
+plt.show();
+"""
+def save_model(model):
+  MODEL_PATH = Path("models")
+  MODEL_PATH.mkdir(parents = True, exist_ok = True)
+
+  MODEL_NAME = "model.pth"
+  MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
+
+  print(f"Saving model to: {MODEL_SAVE_PATH}")
+  torch.save(obj = model.state_dict(),
+             f = MODEL_SAVE_PATH)
+  return MODEL_SAVE_PATH
+
+def load_model(f):
+  model = NeuralNetwork()
+  print(f"Loading model from: {f}")
+  return model.load_state_dict(torch.load(f).to(device))
+
+#saved_path = save_model(model)
+#new_model = load_model(saved_path)
+
