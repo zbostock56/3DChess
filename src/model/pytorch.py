@@ -1,59 +1,42 @@
 import torch
 from torch import nn # neural networks
 from torch import optim # optimizers
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pathlib import Path # Save/Load Model
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import make_circles
+from helpers import load_model, save_model, plot_predictions, accuracy_fn
+import platform
 
 # Check PyTorch Version
 print(f"PyTorch Version: {torch.__version__}")
 
 # Device agnostic setup
 device = "cuda" if torch.cuda.is_available() else "cpu"
+pc = platform.node()
+
+# Make exception for desktop on AMD using ROCM
+if pc == 'eden':
+  device = "cpu"
 print(f"Using {device} device")
 
 # Create Data
-weight = 0.7
-bias = 0.3
-start = 0
-end = 1
-step = 0.0001
-# X = features
-# y = labels
-X = torch.arange(start, end, step).unsqueeze(dim=1)
-y = weight * X + bias
+n_samples = 10000
+X, y = make_circles(n_samples,
+                    noise = 0.03,
+                    random_state = 42)
 
-train_split = int(0.8 * len(X))
-X_train, y_train = X[:train_split], y[:train_split]
-X_test, y_test = X[train_split:], y[train_split:]
+X = torch.from_numpy(X).type(torch.float32)
+y = torch.from_numpy(y).type(torch.float32)
 
-def plot_predictions(train_data=X_train,
-                     train_labels=y_train,
-                     test_data=X_test,
-                     test_labels=y_test,
-                     predictions=None):
-  # Change to CPU for matplotlib requirements
-  train_data = train_data.to("cpu")
-  train_labels = train_labels.to("cpu")
-  test_data = test_data.to("cpu")
-  test_labels = test_labels("cpu")
+X_train, X_test, y_train, y_test = train_test_split(X,
+                                                    y,
+                                                    test_size = 0.2,
+                                                    random_state = 42)
 
-  plt.figure(figsize = (10, 7))
-
-  # Plot training data in blue
-  plt.scatter(train_data, train_labels, c = "b", s = 4, label = "Training data")
-
-  # Plot testing data in green
-  plt.scatter(test_data, test_labels, c = "g", s = 4, label= "Testing data")
-
-  if predictions is not None:
-    # Plot the predictions
-    predictions = predictions.to("cpu")
-    plt.scatter(test_data, predictions, c = "r", s = 4, label = "Predictions")
-
-  plt.legend(prop = {"size": 14})
-  plt.show()
+print(f"Length of X_train: {len(X_train)}\nLength of y_train: {len(y_train)}")
+print(f"Length of X_test: {len(X_test)}\nLength of y_test: {len(y_test)}")
 
 class NeuralNetwork(nn.Module):
   # Constuctor
@@ -61,15 +44,18 @@ class NeuralNetwork(nn.Module):
     super().__init__()
 
     # Model Parameters
-    self.linear_layer = nn.Linear(in_features = 1,
-                                  out_features = 1)
+    self.linear_layers = nn.Sequential(
+      nn.Linear(in_features = 2, out_features = 8),
+      nn.Linear(in_features = 8, out_features = 1)
+    )
+    
     # Define the computation in the model
-  def forward(self, x: torch.Tensor) -> torch.Tensor:
-    return self.linear_layer(x)
+  def forward(self, x):
+    return self.linear_layers(x)
+    # x -> layer1 -> layer2 -> output
 
 # Instance of the model
-model = NeuralNetwork()
-model.to(device)
+model = NeuralNetwork().to(device)
 print(f"Set model to run on correct device: {next(model.parameters()).device}")
 
 # Put data on the correct device
@@ -79,25 +65,22 @@ X_test = X_train.to(device)
 y_test = y_train.to(device)
 print(f"Set data to run on correct device: {device}")
 
-epochs = 1000
-lossfn = nn.L1Loss()
-optimizer = optim.SGD(params = model.parameters(),
-                      lr = 0.01)
-
-# Create empty loss lists to track values
-train_loss_values = []
-test_loss_values = []
-epoch_count = []
+epochs = 10000
+loss_fn = nn.BCEWithLogitsLoss()
+optimizer = optim.Adam(params = model.parameters(),
+                      lr = 0.000001)
 
 for epoch in range(epochs):
     # Set to train mode
     model.train()
-
     # Forward pass on train data
-    y_pred = model(X_train)
-
+    y_logits = model(X_train).squeeze()
+    y_pred = torch.round(torch.sigmoid(y_logits)) # logits -> prediction probs -> prediction labels
+    
     # Calculate the loss
-    loss = lossfn(y_pred, y_train)
+    loss = loss_fn(y_logits, y_train)
+    acc = accuracy_fn(y_true = y_train,
+                      y_pred = y_pred)
 
     # Zero grad of the optimizer
     optimizer.zero_grad()
@@ -113,16 +96,16 @@ for epoch in range(epochs):
 
     with torch.inference_mode():
       # Forward pass on test data
-      test_pred = model(X_test)
+      test_logits = model(X_test).squeeze()
+      test_pred = torch.round(torch.sigmoid(test_logits))
 
       # Caculate loss on test data
-      test_loss = lossfn(test_pred, y_test.type(torch.float)) # predictions come in torch.float datatype, so comparisons need to be done with tensors of the same type
+      test_loss = loss_fn(test_logits, y_test.type(torch.float))
+      test_acc = accuracy_fn(y_true = y_test,
+                            y_pred = test_pred)
 
-      if epoch % 10 == 0:
-            epoch_count.append(epoch)
-            train_loss_values.append(loss.detach().numpy())
-            test_loss_values.append(test_loss.detach().numpy())
-            print(f"Epoch: {epoch} | Loss: {loss} | Test Loss: {test_loss} ")
+      if epoch % 50 == 0:
+            print(f"Epoch: {epoch} | Loss: {loss:.5f} , Acc: {acc:.2f} | Test Loss: {test_loss:.5f}, Test_Acc: {test_acc:.2f}")
 
 """
 plt.plot(epoch_count, train_loss_values, label="Train loss")
@@ -133,23 +116,6 @@ plt.xlabel("Epochs")
 plt.legend();
 plt.show();
 """
-def save_model(model):
-  MODEL_PATH = Path("models")
-  MODEL_PATH.mkdir(parents = True, exist_ok = True)
-
-  MODEL_NAME = "model.pth"
-  MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
-
-  print(f"Saving model to: {MODEL_SAVE_PATH}")
-  torch.save(obj = model.state_dict(),
-             f = MODEL_SAVE_PATH)
-  return MODEL_SAVE_PATH
-
-def load_model(f):
-  model = NeuralNetwork()
-  print(f"Loading model from: {f}")
-  return model.load_state_dict(torch.load(f).to(device))
-
-#saved_path = save_model(model)
-#new_model = load_model(saved_path)
+# saved_path = save_model(model)
+# new_model = load_model(saved_path)
 
