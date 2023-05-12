@@ -9,6 +9,6 @@ src/outreg
 src/outop
 src/line_changer
 src/man_eval
-src/model/data
-src/model/__pycache__
+model/data
+model/__pycache__
 

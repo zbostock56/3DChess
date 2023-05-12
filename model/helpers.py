@@ -1,6 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 from pathlib import Path # Save/Load Model
+
 def plot_predictions(train_data,
                      train_labels,
                      test_data,
@@ -52,3 +53,21 @@ def accuracy_fn(y_true, y_pred):
   acc = (correct / len(y_pred)) * 100
   return acc
 
+# Time runtime
+def print_train_time(start: float,
+                     end: float,
+                     device: torch.device):
+  """
+    Prints the difference between the start and end time
+
+    Args:
+      start (float): start time of computation
+      end (float): End time of computation
+      device ([type]): device that compute operation is running on
+
+    Returns:
+      float: time between start and end in seconds
+  """
+  total_time = end - start
+  print(f"Train time on {device}: {total_time:.3f} seconds")
+  return total_time
