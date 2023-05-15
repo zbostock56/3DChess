@@ -8,6 +8,7 @@ typedef struct node {
   unsigned int bitposition_to;
   unsigned int result;
   MOVE move;
+  TYPE piece_type;
 } node_t;
 
 node_t chosen_moves[1000000];
@@ -50,6 +51,7 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
     possible_moves[possible_moves_i].level_to = 0;
     possible_moves[possible_moves_i].bitposition_from = 0;
     possible_moves[possible_moves_i++].bitposition_to = 0;
+    possible_moves[possible_moves_i++].piece_type = 10;
     return;
   } else if ((player_flags & MATE) == 1) {
     possible_moves_i = 0;
@@ -58,6 +60,7 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
     possible_moves[possible_moves_i].level_to = 0;
     possible_moves[possible_moves_i].bitposition_from = 0;
     possible_moves[possible_moves_i++].bitposition_to = 0;
+    possible_moves[possible_moves_i++].piece_type = 10;
     return;
   }
   for (int i = 0; i < PIECE_TYPES; i++) {
@@ -87,6 +90,7 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
             possible_moves[possible_moves_i].bitposition_from = move.from[1];
             possible_moves[possible_moves_i].bitposition_to = move.to[1];
             possible_moves[possible_moves_i].move = move;
+            possible_moves[possible_moves_i].piece_type = i;
             translate_position(move.args, possible_moves_i++);
           }
         }
@@ -129,6 +133,8 @@ void translate_position(BOARD_ARGS *args, int arr_pos) {
           } else if (j == KNIGHT) {
             val = 5;
           }
+          if (i == BLACK)
+            val += 6;
           p[(k * 64) + m] = val;
           x ^= (ONE << m);
           m = log2_lookup(x);
@@ -154,34 +160,39 @@ void reset_possible_moves() {
 
 void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   srand(random_val_gen());
-  FILE *fp = fopen("output.csv", "a+");
+  FILE *fp = fopen("move_data/samples.csv", "a+");
+  FILE *labels = fopen("move_data/lables.csv", "a+");
+  FILE *all = fopen("move_data/all.csv", "a+");
+  FILE *chess_poss = fopen("move_data/chess_poss.csv", "a+");
+  FILE *from_move_only = fopen("move_data/from_move_only.csv", "a+");
   int turn_number = 0;
   int turn = 0;
   while (1) {
-    if (turn_number == 500) {
+    turn_number++;
+    if (turn_number == 300) {
       fprintf(stderr, "HIT MAX MOVE NUMBER... EXITING...\n");
-     // fprintf(stderr, "random_val_gen(): %u\n", random_val_gen());
       fclose(fp);
+      fclose(labels);
+      fclose(all);
+      fclose(chess_poss);
+      fclose(from_move_only);
       exit(0);
     }
     if (turn == 0) {
       // WHITE'S MOVE
       search_output(args, WHITE);
-      fprintf(stderr, "MOVE NUMBER: %d\n", turn_number++);
-      //fprintf(stderr, "WHITE'S MOVE\n");
-      //print_game(args);
-      //sleep(6);
+      turn++;
       if (possible_moves_i == 1) {
         // MATE
         if (possible_moves[0].result == 1) {
           // BLACK IS IN MATE
           fprintf(stderr, "BLACK IN MATE\n");
-          write_to_file(1, fp);
+          write_to_file(1, fp, labels, all, chess_poss, from_move_only);
           return;
         } else {
           // WHITE IN MATE
           fprintf(stderr, "WHITE IN MATE\n");
-          write_to_file(0, fp);
+          write_to_file(0, fp, labels, all, chess_poss, from_move_only);
           return;
         }
         return;
@@ -207,29 +218,23 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
           type = KING;
         }
         make_move(args, WHITE, type, from, to);
-        //printf("from[0] %u\nfrom[1] %u\nto[0]"
-        //" %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
-        //print_game(args);
         reset_possible_moves();
       }
       turn = 1;
     } else {
       // BLACK'S MOVE
       search_output(args, BLACK);
-      //fprintf(stderr, "BLACK'S MOVE\n");
-      //print_game(args);
-     // sleep(6);
       if (possible_moves_i == 1) {
         // MATE
         if (possible_moves[0].result == 1) {
           // WHITE IN MATE
           fprintf(stderr, "WHITE IN MATE\n");
-          write_to_file(0, fp);
+          write_to_file(0, fp, labels, all, chess_poss, from_move_only);
           return;
         } else {
           // BLACK IN MATE
           fprintf(stderr, "BLACK IN MATE\n");
-          write_to_file(1, fp);
+          write_to_file(1, fp, labels, all, chess_poss, from_move_only);
           return;
         }
         return;
@@ -254,9 +259,6 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
           type = KING;
         }
         make_move(args, BLACK, type, from, to);
-        //printf("from[0] %u\nfrom[1] %u\nto[0]"
-        //" %u\nto[1] %u\n", from[0], from[1], to[0], to[1]);
-        //print_game(args);
         reset_possible_moves();
         turn = 0;
       }
@@ -348,29 +350,47 @@ void print_game(BOARD_ARGS *args) {
   fflush(stdout);
 }
 
-void write_to_file(int result, FILE *fp) {
+void write_to_file(int result, FILE *samples, FILE *labels, FILE *all, FILE *poss_only, FILE *from_move_only) {
   if (result == 1) {
     // GAME WAS A WIN
     for (int i = 0; i < chosen_moves_i; i++) {
       for (int j = 0; j < 192; j++) {
-        fprintf(fp, "%d", chosen_moves[i].position[j]);
+        fprintf(samples, "%d,", chosen_moves[i].position[j]);
+        fprintf(all, "%d,", chosen_moves[i].position[j]);
+        fprintf(poss_only, "%d,", chosen_moves[i].position[j]);
       }
+      fprintf(poss_only, "\n");
       int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
       int to = ((chosen_moves[i].level_to) * 63) + (chosen_moves[i].bitposition_to);
-      fprintf(fp, ",%d,%d,%d\n", from, to, 1);
+      unsigned int piece_type = chosen_moves[i].piece_type;
+      fprintf(samples, "%d,%u\n", from, piece_type);
+      fprintf(labels, "%d\n", to);
+      fprintf(all, "%d,%u,%d\n", from, piece_type, to);
+      fprintf(from_move_only, "%d\n", from);
     }
   } else {
     // GAME WAS A LOSS
     for (int i = 0; i < chosen_moves_i; i++) {
       for (int j = 0; j < 192; j++) {
-        fprintf(fp, "%d", chosen_moves[i].position[j]);
+        fprintf(samples, "%d,", chosen_moves[i].position[j]);
+        fprintf(all, "%d,", chosen_moves[i].position[j]);
+        fprintf(poss_only, "%d,", chosen_moves[i].position[j]);
       }
+      fprintf(poss_only, "\n");
       int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
       int to = ((chosen_moves[i].level_to) * 63) + (chosen_moves[i].bitposition_to);
-      fprintf(fp, ",%d,%d,%d\n", from, to, 0);
+      unsigned int piece_type = chosen_moves[i].piece_type;
+      fprintf(samples, "%d,%u\n", from, piece_type);
+      fprintf(labels, "%d\n", to);
+      fprintf(all, "%d,%u,%d\n", from, piece_type, to);
+      fprintf(from_move_only, "%d\n", from);
     }
   }
-  fclose(fp);
+  fclose(samples);
+  fclose(labels);
+  fclose(all);
+  fclose(poss_only);
+  fclose(from_move_only);
 }
 
 unsigned int random_val_gen() {

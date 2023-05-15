@@ -20,7 +20,8 @@
   void translate_position(BOARD_ARGS *args, int arr_pos);
   void reset_possible_moves();
   void output_to_file(BOARD_ARGS *args, SIDE to_move);
-  void write_to_file(int result, FILE *fp);
+  void write_to_file(int result, FILE *samples, FILE *labels,
+                     FILE *all, FILE *chess_poss, FILE *from_move_only);
   void print_game(BOARD_ARGS *args);
   unsigned int random_val_gen();
 
