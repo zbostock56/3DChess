@@ -19,8 +19,8 @@ seed = int(round(datetime.now().timestamp()))
 print(f"Time seed: {seed}")
 
 # import data
-samples = pd.read_csv("~/test_samples.csv")
-labels = pd.read_csv("~/test_lables.csv")
+samples = pd.read_csv("~/move_data/samples.csv")
+labels = pd.read_csv("~/move_data/lables.csv")
 
 # Check PyTorch Version
 print(f"PyTorch Version: {torch.__version__}")
