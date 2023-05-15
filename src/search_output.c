@@ -357,7 +357,10 @@ void write_to_file(int result, FILE *samples, FILE *labels, FILE *all, FILE *pos
       for (int j = 0; j < 192; j++) {
         fprintf(samples, "%d,", chosen_moves[i].position[j]);
         fprintf(all, "%d,", chosen_moves[i].position[j]);
-        fprintf(poss_only, "%d,", chosen_moves[i].position[j]);
+        if (j != 191)
+          fprintf(poss_only, "%d,", chosen_moves[i].position[j]);
+        else
+          fprintf(poss_only, "%d", chosen_moves[i].position[j]);
       }
       fprintf(poss_only, "\n");
       int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
@@ -374,7 +377,10 @@ void write_to_file(int result, FILE *samples, FILE *labels, FILE *all, FILE *pos
       for (int j = 0; j < 192; j++) {
         fprintf(samples, "%d,", chosen_moves[i].position[j]);
         fprintf(all, "%d,", chosen_moves[i].position[j]);
-        fprintf(poss_only, "%d,", chosen_moves[i].position[j]);
+        if (j != 191)
+          fprintf(poss_only, "%d,", chosen_moves[i].position[j]);
+        else
+          fprintf(poss_only, "%d", chosen_moves[i].position[j]);
       }
       fprintf(poss_only, "\n");
       int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
