@@ -1,4 +1,5 @@
 import pygame
+import numpy as np
 
 # init pygame
 pygame.init()
@@ -49,23 +50,25 @@ def load_board_configs(file_name):
 # Create sprites for chess pieces
 def create_sprites(board_configs):
   sprites = pygame.sprite.Group()
-  print(f"Board config: {board_configs}")
-  for level, board_config in enumerate(board_configs):
-    for row in range(len(board_config)):
-      for col in range(len(board_config[row])):
-        piece = int(board_config[row][col].strip())
-        print(f"piece: {piece} | row: {row} | col: {col}")
-        if piece != 0 and piece in pieces:
-          x = col * tile_size
-          x += 400
-          y = level * (board_size * tile_size) + row * tile_size
-          y += 50
-          sprite = pygame.sprite.Sprite()
-          sprite.image = pieces[piece]
-          sprite.rect = sprite.image.get_rect()
-          sprite.rect.x = x
-          sprite.rect.y = y
-          sprites.add(sprite)
+  board = np.asarray(board_configs).squeeze()
+  for idx in range(len(board)):
+    piece = int(board[idx])
+    level = idx // 64
+    if piece != 0 and piece in pieces:
+      x = (idx % 8) * tile_size
+      x += 400
+      y = (board_size) + (idx // 8) * tile_size
+      y += 40
+      if level == 0:
+        y -= 50
+      elif level == 2:
+        y += 50
+      sprite = pygame.sprite.Sprite()
+      sprite.image = pieces[piece]
+      sprite.rect = sprite.image.get_rect()
+      sprite.rect.x = x
+      sprite.rect.y = y
+      sprites.add(sprite)
   return sprites
 
 # Main game loop
