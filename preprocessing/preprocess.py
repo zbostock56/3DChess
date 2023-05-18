@@ -39,90 +39,123 @@ pieces = {
 
 # Load chess board configurations from file
 def load_board_configs(file_name):
-  try:
-    with open(file_name, "r") as file:
-      lines = file.readlines()
-      return [line.strip().split(",") for line in lines]
-  except IOError:
-    print(f"Error: Could not open file '{file_name}'")
-    return None
+    try:
+        with open(file_name, "r") as file:
+            lines = file.readlines()
+            return [line.strip().split(",") for line in lines]
+    except IOError:
+        print(f"Error: Could not open file '{file_name}'")
+        return None
 
 # Create sprites for chess pieces
 def create_sprites(board_configs):
-  sprites = pygame.sprite.Group()
-  board = np.asarray(board_configs).squeeze()
-  for idx in range(len(board)):
-    piece = int(board[idx])
-    level = idx // 64
-    if piece != 0 and piece in pieces:
-      x = (idx % 8) * tile_size
-      x += 400
-      y = (board_size) + (idx // 8) * tile_size
-      y += 40
-      if level == 0:
-        y -= 50
-      elif level == 2:
-        y += 50
-      sprite = pygame.sprite.Sprite()
-      sprite.image = pieces[piece]
-      sprite.rect = sprite.image.get_rect()
-      sprite.rect.x = x
-      sprite.rect.y = y
-      sprites.add(sprite)
-  return sprites
+    sprites = pygame.sprite.Group()
+    board = np.asarray(board_configs).squeeze()
+    for idx in range(len(board)):
+        piece = int(board[idx])
+        level = idx // 64
+        if piece != 0 and piece in pieces:
+            x = (idx % 8) * tile_size
+            x += 400
+            y = (board_size) + (idx // 8) * tile_size
+            y += 40
+            if level == 0:
+                y -= 50
+            elif level == 2:
+                y += 50
+            sprite = pygame.sprite.Sprite()
+            sprite.image = pieces[piece]
+            sprite.rect = sprite.image.get_rect()
+            sprite.rect.x = x
+            sprite.rect.y = y
+            sprites.add(sprite)
+    return sprites
 
 # Main game loop
 def game_loop():
-  # Load board configs
-  board_configs = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/chess_poss.csv")
-  if not board_configs:
-    return
+    # Load board configs
+    board_configs = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/chess_poss.csv")
+    if not board_configs:
+        return
 
-  # Set up sprites
-  current_board = 0
-  sprites = create_sprites(board_configs[current_board])
+    # Set up sprites
+    current_board = 0
+    sprites = create_sprites(board_configs[current_board])
+    previous_boards = []  # List to store previous board configurations
+    previous_boards.append(board_configs[current_board])
 
-  clock = pygame.time.Clock()
-  running = True
+    clock = pygame.time.Clock()
+    running = True
 
-  # game loop
-  while running:
-    for event in pygame.event.get():
-      if event.type == pygame.QUIT:
-        running = False
-      elif event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_SPACE:
-          # Move to the next line in the file
-          current_board = (current_board + 1) % len(board_configs)
-          # Clear the sprites and load the new board config
-          sprites.empty()
-          sprites = create_sprites([board_configs[current_board]])
+    # game loop
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    # Move to the next line in the file
+                    current_board = (current_board + 1) % len(board_configs)
+                    # Clear the sprites and load the new board config
+                    sprites.empty()
+                    sprites = create_sprites([board_configs[current_board]])
+                    previous_boards.append(board_configs[current_board])
+                elif event.key == pygame.K_BACKSPACE:
+                    if len(previous_boards) > 1:
+                        previous_boards.pop()
+                        current_board = (current_board - 1) % len(board_configs)
+                        sprites.empty()
+                        sprites = create_sprites(previous_boards[-1])
+                elif event.key == pygame.K_p:
+                    # Save the current board configuration to "passed.csv" file
+                    with open("passed.csv", "a") as file:
+                        file.write(",".join(previous_boards[-1]))
+                        file.write("\n")
+                    # Move to the next line in the file
+                    current_board = (current_board + 1) % len(board_configs)
+                    # Clear the sprites and load the new board config
+                    sprites.empty()
+                    sprites = create_sprites([board_configs[current_board]])
+                    previous_boards.append(board_configs[current_board])
+                elif event.key == pygame.K_q:
+                    # Move to the next line in the file
+                    current_board = (current_board + 1) % len(board_configs)
+                    # Clear the sprites and load the new board config
+                    sprites.empty()
+                    sprites = create_sprites([board_configs[current_board]])
+                    previous_boards.append(board_configs[current_board])
+                elif event.key == pygame.K_ESCAPE:
+                    running = False
 
+        # Clear the screen
+        screen.fill((0, 0, 0))
 
-    # Clear the screen
-    screen.fill((0,0,0))
+        # Draw chess board
+        for level in range(3):
+            for row in range(board_size):
+                for col in range(board_size):
+                    x = col * tile_size
+                    x += 400
+                    y = level * (board_size * tile_size) + row * tile_size
+                    if level == 1:
+                        y += 50
+                    elif level == 2:
+                        y += 100
+                    color = WHITE if (row + col) % 2 == 0 else BLACK
+                    pygame.draw.rect(screen, color, (x, y, tile_size, tile_size))
 
-    # Draw chess board
-    for level in range(3):
-      for row in range(board_size):
-        for col in range(board_size):
-          x = col * tile_size
-          x += 400
-          y = level * (board_size * tile_size) + row * tile_size
-          if level == 1:
-            y += 50
-          elif level == 2:
-            y += 100
-          color = WHITE if (row + col) % 2 == 0 else BLACK
-          pygame.draw.rect(screen, color, (x, y, tile_size, tile_size))
+        # Draw pieces
+        sprites.update()
+        sprites.draw(screen)
 
-    # Draw pieces
-    sprites.update()
-    sprites.draw(screen)
+        # Render the current board number
+        font = pygame.font.Font(None, 36)
+        text = font.render(f"Board: {current_board + 1}", True, WHITE)
+        screen.blit(text, (20, 20))
 
-    pygame.display.flip()
-    clock.tick(60)
+        pygame.display.flip()
+        clock.tick(60)
 
-  pygame.quit()
+    pygame.quit()
 
 game_loop()
