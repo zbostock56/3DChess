@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from arrow import draw_arrow
 
 # init pygame
 pygame.init()
@@ -12,12 +13,13 @@ pygame.display.set_caption("Data Preprocessing")
 # Colors
 BLACK = (156, 84, 84)
 WHITE = (255, 216, 216)
+RED = (255, 0, 0)
 
 # Set chess board dimensions
 board_size = 8
 tile_size = height // (board_size * 3.5)
 
-# Calculate the new size based on 90% of tile size
+# Calculate the new size based on 100% of tile size
 new_size = int(tile_size * 1)
 
 # Load chess piece images
@@ -71,11 +73,31 @@ def create_sprites(board_configs):
             sprites.add(sprite)
     return sprites
 
+# Create arrow
+def create_arrow(from_square, to_square):
+    from_x = (from_square % 8) * tile_size + 400
+    from_y = (from_square // 8) * tile_size + tile_size
+    to_x = (to_square % 8) * tile_size + 400
+    to_y = (to_square // 8) * tile_size + tile_size
+    start = pygame.Vector2(from_x, from_y)
+    end = pygame.Vector2(to_x, to_y)
+    draw_arrow(screen, start, end, pygame.Color("dodgerblue"), 10, 20, 12)
+
 # Main game loop
 def game_loop():
     # Load board configs
     board_configs = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/chess_poss.csv")
     if not board_configs:
+        return
+
+    # Load from_poss configs
+    from_poss = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/from_move_only.csv")
+    if not from_poss:
+        return
+
+    # Load to_poss configs
+    to_poss = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/lables.csv")
+    if not to_poss:
         return
 
     # Set up sprites
@@ -96,16 +118,10 @@ def game_loop():
                 if event.key == pygame.K_SPACE:
                     # Move to the next line in the file
                     current_board = (current_board + 1) % len(board_configs)
-                    # Clear the sprites and load the new board config
-                    sprites.empty()
-                    sprites = create_sprites([board_configs[current_board]])
-                    previous_boards.append(board_configs[current_board])
                 elif event.key == pygame.K_BACKSPACE:
                     if len(previous_boards) > 1:
                         previous_boards.pop()
                         current_board = (current_board - 1) % len(board_configs)
-                        sprites.empty()
-                        sprites = create_sprites(previous_boards[-1])
                 elif event.key == pygame.K_p:
                     # Save the current board configuration to "passed.csv" file
                     with open("passed.csv", "a") as file:
@@ -113,19 +129,22 @@ def game_loop():
                         file.write("\n")
                     # Move to the next line in the file
                     current_board = (current_board + 1) % len(board_configs)
-                    # Clear the sprites and load the new board config
-                    sprites.empty()
-                    sprites = create_sprites([board_configs[current_board]])
-                    previous_boards.append(board_configs[current_board])
                 elif event.key == pygame.K_q:
                     # Move to the next line in the file
                     current_board = (current_board + 1) % len(board_configs)
-                    # Clear the sprites and load the new board config
-                    sprites.empty()
-                    sprites = create_sprites([board_configs[current_board]])
-                    previous_boards.append(board_configs[current_board])
                 elif event.key == pygame.K_ESCAPE:
                     running = False
+
+                # Clear the sprites and load the new board config
+                sprites.empty()            
+                sprites = create_sprites([board_configs[current_board]])
+                previous_boards.append(board_configs[current_board])
+            """    
+            elif event.type == pygame.MOUSEMOTION:
+              # Display mouse coordinates in the terminal
+              x, y = event.pos
+              print(f"Mouse coordinates: x={x}, y={y}")
+            """
 
         # Clear the screen
         screen.fill((0, 0, 0))
@@ -144,18 +163,21 @@ def game_loop():
                     color = WHITE if (row + col) % 2 == 0 else BLACK
                     pygame.draw.rect(screen, color, (x, y, tile_size, tile_size))
 
-        # Draw pieces
-        sprites.update()
+        # Draw the chess pieces and arrow
         sprites.draw(screen)
-
+        sprites.update()
+        if current_board < len(from_poss) and current_board < len(to_poss):
+          create_arrow(int(from_poss[current_board][0]), int(to_poss[current_board][0]))     
+        
         # Render the current board number
         font = pygame.font.Font(None, 36)
         text = font.render(f"Board: {current_board + 1}", True, WHITE)
         screen.blit(text, (20, 20))
 
+        # Update the screen
         pygame.display.flip()
         clock.tick(60)
-
     pygame.quit()
 
+# Run the game loop
 game_loop()
