@@ -15,6 +15,7 @@ pygame.display.set_caption("Data Preprocessing")
 BLACK = (156, 84, 84)
 WHITE = (255, 216, 216)
 RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
 # Set chess board dimensions
 board_size = 8
@@ -76,20 +77,29 @@ def create_sprites(board_configs):
 
 # Create arrow
 def create_arrow(from_square, to_square):
-    from_x = (from_square % 8) * tile_size + 400
-    from_y = (from_square // 8) * tile_size + tile_size
-    to_x = (to_square % 8) * tile_size + 400
-    to_y = (to_square // 8) * tile_size + tile_size
-    print(f"from_x: {from_x} | from_y: {from_y} | to_x: {to_x} | to_y: {to_y}")
+    level_from, level_to = (from_square // 64), (to_square // 64)
+    from_x = (from_square % 8) * tile_size + 400 + (tile_size * 1.5)
+    from_y = (from_square // 8) * tile_size + tile_size + 25
+    to_x = (to_square % 8) * tile_size + 400 + (tile_size * 0.5)
+    to_y = (to_square // 8) * tile_size + tile_size + 25
+    if (level_from > level_to):
+      to_y -= 50
+    elif (level_to > level_from):
+      to_y += 50
+    #print(f"from_x: {from_x} | from_y: {from_y} | to_x: {to_x} | to_y: {to_y}")
     start = pygame.Vector2(from_x, from_y)
     end = pygame.Vector2(to_x, to_y)
-    draw_arrow(screen, start, end, pygame.Color("dodgerblue"), 10, 20, 12)
+    #pygame.draw.circle(screen, RED, start, (tile_size / 2), width = 2)
+    #pygame.draw.circle(screen, RED, end, (tile_size / 2), width = 2)
+    #draw_arrow(screen, start, end, pygame.Color("dodgerblue"), 10, 20, 12)
 
 # Main game loop
 def game_loop():
     bc_filepath = os.path.expanduser("../src/move_data/chess_poss.csv")
     fp_filepath = os.path.expanduser("../src/move_data/from_move_only.csv")
     tp_filepath = os.path.expanduser("../src/move_data/lables.csv")
+    all_filepath = os.path.expanduser("../src/move_data/all.csv")
+
     # Load board configs
     board_configs = load_board_configs(bc_filepath)
     if not board_configs:
@@ -104,6 +114,10 @@ def game_loop():
     to_poss = load_board_configs(tp_filepath)
     if not to_poss:
         return
+
+    all_poss = load_board_configs(all_filepath)
+    if not all_poss:
+      return
 
     # Set up sprites
     current_board = 0
@@ -132,7 +146,7 @@ def game_loop():
                     num_saved += 1
                     # Save the current board configuration to "passed.csv" file
                     with open("passed.csv", "a") as file:
-                        file.write(",".join(previous_boards[-1]))
+                        file.write(",".join(all_poss[current_board]))
                         file.write("\n")
                     # Move to the next line in the file
                     current_board = (current_board + 1) % len(board_configs)
@@ -143,23 +157,26 @@ def game_loop():
                     running = False
 
                 # Clear the sprites and load the new board config
-                sprites.empty()            
+                sprites.empty()
                 sprites = create_sprites([board_configs[current_board]])
                 previous_boards.append(board_configs[current_board])
-            """    
+            """
             elif event.type == pygame.MOUSEMOTION:
               # Display mouse coordinates in the terminal
               x, y = event.pos
               print(f"Mouse coordinates: x={x}, y={y}")
             """
-
         # Clear the screen
         screen.fill((0, 0, 0))
+        from_square = int(from_poss[current_board][0])
+        to_square = int(to_poss[current_board][0])
 
         # Draw chess board
+        cur_square = 0
         for level in range(3):
             for row in range(board_size):
                 for col in range(board_size):
+                    cur_square += 1
                     x = col * tile_size
                     x += 400
                     y = level * (board_size * tile_size) + row * tile_size
@@ -168,17 +185,32 @@ def game_loop():
                     elif level == 2:
                         y += 100
                     color = WHITE if (row + col) % 2 == 0 else BLACK
+                    if level == 0:
+                      if cur_square - 1 == from_square:
+                        color = BLUE
+                      elif cur_square - 1 == to_square:
+                        color = RED
+                    elif level == 1:
+                      if cur_square - 2 == from_square:
+                        color = BLUE
+                      elif cur_square - 2 == to_square:
+                        color = RED
+                    elif level == 2:
+                      if cur_square - 3 == from_square:
+                        color = BLUE
+                      elif cur_square - 3 == to_square:
+                        color = RED
                     pygame.draw.rect(screen, color, (x, y, tile_size, tile_size))
 
         # Draw the chess pieces and arrow
         sprites.draw(screen)
         sprites.update()
         if current_board < len(from_poss) and current_board < len(to_poss):
-          create_arrow(int(from_poss[current_board][0]), int(to_poss[current_board][0]))     
+          create_arrow(from_square, to_square)
 
         # Render the current board number
         font = pygame.font.Font(None, 36)
-        text = font.render(f"Board: {current_board + 1}/{len(board_configs)}", True, WHITE)
+        text = font.render(f"Board: {current_board + 1} / {len(board_configs)}", True, WHITE)
         saved = font.render(f"Number Saved: {num_saved}", True, WHITE)
         screen.blit(text, (20, 20))
         screen.blit(saved, (20, 60))
