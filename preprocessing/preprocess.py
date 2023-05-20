@@ -1,12 +1,13 @@
 import pygame
 import numpy as np
 from arrow import draw_arrow
+import os.path
 
 # init pygame
 pygame.init()
 
 # Set up display
-width, height = 1200, 1200
+width, height = 1200, 1000
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Data Preprocessing")
 
@@ -85,23 +86,27 @@ def create_arrow(from_square, to_square):
 
 # Main game loop
 def game_loop():
+    bc_filepath = os.path.expanduser("../src/move_data/chess_poss.csv")
+    fp_filepath = os.path.expanduser("../src/move_data/from_move_only.csv")
+    tp_filepath = os.path.expanduser("../src/move_data/from_move_only.csv")
     # Load board configs
-    board_configs = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/chess_poss.csv")
+    board_configs = load_board_configs(bc_filepath)
     if not board_configs:
         return
 
     # Load from_poss configs
-    from_poss = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/from_move_only.csv")
+    from_poss = load_board_configs(fp_filepath)
     if not from_poss:
         return
 
     # Load to_poss configs
-    to_poss = load_board_configs("/home/zbostock/Projects/3DChess/src/move_data/lables.csv")
+    to_poss = load_board_configs(tp_filepath)
     if not to_poss:
         return
 
     # Set up sprites
     current_board = 0
+    num_saved = 0
     sprites = create_sprites(board_configs[current_board])
     previous_boards = []  # List to store previous board configurations
     previous_boards.append(board_configs[current_board])
@@ -123,6 +128,7 @@ def game_loop():
                         previous_boards.pop()
                         current_board = (current_board - 1) % len(board_configs)
                 elif event.key == pygame.K_p:
+                    num_saved += 1
                     # Save the current board configuration to "passed.csv" file
                     with open("passed.csv", "a") as file:
                         file.write(",".join(previous_boards[-1]))
@@ -168,11 +174,13 @@ def game_loop():
         sprites.update()
         if current_board < len(from_poss) and current_board < len(to_poss):
           create_arrow(int(from_poss[current_board][0]), int(to_poss[current_board][0]))     
-        
+
         # Render the current board number
         font = pygame.font.Font(None, 36)
-        text = font.render(f"Board: {current_board + 1}", True, WHITE)
+        text = font.render(f"Board: {current_board + 1}/{len(board_configs)}", True, WHITE)
+        saved = font.render(f"Number Saved: {num_saved}", True, WHITE)
         screen.blit(text, (20, 20))
+        screen.blit(saved, (20, 60))
 
         # Update the screen
         pygame.display.flip()
