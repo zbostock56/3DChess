@@ -80,6 +80,7 @@ def create_arrow(from_square, to_square):
     from_y = (from_square // 8) * tile_size + tile_size
     to_x = (to_square % 8) * tile_size + 400
     to_y = (to_square // 8) * tile_size + tile_size
+    print(f"from_x: {from_x} | from_y: {from_y} | to_x: {to_x} | to_y: {to_y}")
     start = pygame.Vector2(from_x, from_y)
     end = pygame.Vector2(to_x, to_y)
     draw_arrow(screen, start, end, pygame.Color("dodgerblue"), 10, 20, 12)
@@ -88,7 +89,7 @@ def create_arrow(from_square, to_square):
 def game_loop():
     bc_filepath = os.path.expanduser("../src/move_data/chess_poss.csv")
     fp_filepath = os.path.expanduser("../src/move_data/from_move_only.csv")
-    tp_filepath = os.path.expanduser("../src/move_data/from_move_only.csv")
+    tp_filepath = os.path.expanduser("../src/move_data/lables.csv")
     # Load board configs
     board_configs = load_board_configs(bc_filepath)
     if not board_configs:
