@@ -245,7 +245,7 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
         } else if ((player_flags & MATE) == 1 || (enemy_flags & MATE) == 1) {
           current = evaluate(args, to_move, player_flags, enemy_flags, turn);
           if ((to_move == WHITE && current.score >= best.score) ||
-              (to_move == BLACK && current.score <= best.score )) {
+              (to_move == BLACK && current.score <= best.score)) {
               best.score = current.score;
               best.from[0] = current_position[0];
               best.from[1] = current_position[1];
@@ -277,20 +277,20 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
               current = search(&copy, enemy, depth - 1, alpha, beta, turn + 1);
               if ((to_move == WHITE && current.score >= best.score) ||
                 (to_move == BLACK && current.score <= best.score )) {
-                if (current.rating > best.rating) {
-                  best.score = current.score;
-                  best.from[0] = current_position[0];
-                  best.from[1] = current_position[1];
-                  best.to[0] = to_position[0];
-                  best.to[1] = to_position[1];
-                  best.rating = current.rating;
-                } else if ((enemy_flags & MATE)){
+                } if ((enemy_flags & MATE)) {
                   best.score = current.score;
                   best.from[0] = current_position[0];
                   best.from[1] = current_position[1];
                   best.to[0] = to_position[0];
                   best.to[1] = to_position[1];
                   best.rating = INT_MAX;
+                } else if (current.rating > best.rating) {
+                  best.score = current.score;
+                  best.from[0] = current_position[0];
+                  best.from[1] = current_position[1];
+                  best.to[0] = to_position[0];
+                  best.to[1] = to_position[1];
+                  best.rating = current.rating;
                 } else if ((enemy_flags & CHECK) || (enemy_flags & D_CHECK)) {
                   best.score = current.score;
                   best.from[0] = current_position[0];
@@ -299,32 +299,63 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                   best.to[1] = to_position[1];
                   best.rating = current.rating * 10;
                 }
-                if (to_move == WHITE) {
+                // ALPHA-BETA PRUNING
+                /*
+                  IF MAXIMIZING PLAYER (WHITE):
+                    ALPHA = MAX(ALPHA, EVAL)
+                    IF BETA <= ALPHA:
+                      BREAK
+                  ELSE:
+                    BETA = MIN(BETA, EVAL)
+                    IF BETA <= ALPHA:
+                      BREAK
+                */
+               #if 0
+               if (to_move == WHITE) {
                   // WHITE = 0; BLACK = 1
                   if (player_flags & MATE) {
-                    alpha = get_max_min(!to_move, alpha, best.score);
-                  } else {
-                    alpha = get_max_min(!to_move, alpha,
+                    alpha = get_max_min(to_move, alpha,
                             ((best.score * 5) + best.rating));
+                  } else {
+                    alpha = get_max_min(to_move, alpha, best.score);
                   }
                 } else {
                   if (player_flags & MATE) {
-                    beta = get_max_min(!to_move, beta,
+                    beta = get_max_min(to_move, beta,
                             ((best.score * 5) - best.rating));
                   } else {
-                    beta = get_max_min(!to_move, beta, best.score);
+                    beta = get_max_min(to_move, beta, best.score);
                   }
                 }
-              }
-              if (beta <= alpha) {
-                break;
+                if (beta <= alpha) {
+                  break;
+                }
+              #endif
+                if (to_move == WHITE) {
+                  // WHITE = 0; BLACK = 1
+                  if (player_flags & MATE) {
+                    alpha = get_max_min(to_move, alpha,
+                            ((best.score * 5)));
+                  } else {
+                    alpha = get_max_min(to_move, alpha, best.score);
+                  }
+                } else {
+                  if (player_flags & MATE) {
+                    beta = get_max_min(to_move, beta,
+                            ((best.score * 5)));
+                  } else {
+                    beta = get_max_min(to_move, beta, best.score);
+                  }
+                }
+                if (beta <= alpha) {
+                  break;
+                }
               }
             }
           }
         }
       }
     }
-  }
   return best;
 }
 
@@ -418,7 +449,7 @@ void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
 }
 
 int get_max_min(int is_max, int one, int two) {
-  if (is_max) {
+  if (!is_max) {
     // FINDING FOR WHITE
     if (one > two)
       return one;

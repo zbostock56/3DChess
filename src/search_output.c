@@ -50,8 +50,9 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
     possible_moves[possible_moves_i].level_from = 0;
     possible_moves[possible_moves_i].level_to = 0;
     possible_moves[possible_moves_i].bitposition_from = 0;
-    possible_moves[possible_moves_i++].bitposition_to = 0;
+    possible_moves[possible_moves_i].bitposition_to = 0;
     possible_moves[possible_moves_i++].piece_type = 10;
+    //possible_moves[possible_moves_i++].position = (int *) (malloc(192 * sizeof(int)));
     return;
   } else if ((player_flags & MATE) == 1) {
     possible_moves_i = 0;
@@ -59,8 +60,9 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
     possible_moves[possible_moves_i].level_from = 0;
     possible_moves[possible_moves_i].level_to = 0;
     possible_moves[possible_moves_i].bitposition_from = 0;
-    possible_moves[possible_moves_i++].bitposition_to = 0;
+    possible_moves[possible_moves_i].bitposition_to = 0;
     possible_moves[possible_moves_i++].piece_type = 10;
+    //possible_moves[possible_moves_i++].position = (int *) (malloc(192 * sizeof(int)));
     return;
   }
   for (int i = 0; i < PIECE_TYPES; i++) {
@@ -404,4 +406,118 @@ unsigned int random_val_gen() {
     gettimeofday(&tv,NULL);
     long long state = (((long long) tv.tv_sec) * 1000) + (tv.tv_usec / 1000);
     return (unsigned int) state;
+}
+
+void five_move_random(BOARD_ARGS *args, SIDE to_move) {
+  srand(random_val_gen());
+  FILE *fp = fopen("move_data/samples.csv", "a+");
+  FILE *labels = fopen("move_data/lables.csv", "a+");
+  FILE *all = fopen("move_data/all.csv", "a+");
+  FILE *chess_poss = fopen("move_data/chess_poss.csv", "a+");
+  FILE *from_move_only = fopen("move_data/from_move_only.csv", "a+");
+  int turn_number = 0;
+  int turn = 0;
+  while (1) {
+    turn_number++;
+    if (turn_number == 300) {
+      fprintf(stderr, "HIT MAX MOVE NUMBER... EXITING...\n");
+      fclose(fp);
+      fclose(labels);
+      fclose(all);
+      fclose(chess_poss);
+      fclose(from_move_only);
+      exit(0);
+    }
+    if (turn_number <= 5) {
+      // PLAY RANDOM MOVES
+        if (turn == 0) {
+        // WHITE'S MOVE
+        search_output(args, WHITE);
+        turn++;
+        if (possible_moves_i == 1) {
+          // MATE
+          if (possible_moves[0].result == 1) {
+            // BLACK IS IN MATE
+            fprintf(stderr, "BLACK IN MATE\n");
+            write_to_file(1, fp, labels, all, chess_poss, from_move_only);
+            return;
+          } else {
+            // WHITE IN MATE
+            fprintf(stderr, "WHITE IN MATE\n");
+            write_to_file(0, fp, labels, all, chess_poss, from_move_only);
+            return;
+          }
+          return;
+        } else {
+          // NORMAL MOVE
+          int num = (rand() % (possible_moves_i - 1)) + 1;
+          chosen_moves[chosen_moves_i++] = possible_moves[num];
+          unsigned int *to = possible_moves[num].move.to;
+          unsigned int *from = possible_moves[num].move.from;
+          uint64_t cur = (ONE << from[1]);
+          TYPE type;
+          if (args->piece_boards[WHITE][BISHOP][from[0]] & cur) {
+            type = BISHOP;
+          } else if (args->piece_boards[WHITE][ROOK][from[0]] & cur) {
+            type = ROOK;
+          } else if (args->piece_boards[WHITE][QUEEN][from[0]] & cur) {
+            type = QUEEN;
+          } else if (args->piece_boards[WHITE][PAWN][from[0]] & cur) {
+            type = PAWN;
+          } else if (args->piece_boards[WHITE][KNIGHT][from[0]] & cur) {
+            type = KNIGHT;
+          } else {
+            type = KING;
+          }
+          make_move(args, WHITE, type, from, to);
+          reset_possible_moves();
+        }
+        turn = 1;
+      } else {
+        // BLACK'S MOVE
+        search_output(args, BLACK);
+        if (possible_moves_i == 1) {
+          // MATE
+          if (possible_moves[0].result == 1) {
+            // WHITE IN MATE
+            fprintf(stderr, "WHITE IN MATE\n");
+            write_to_file(0, fp, labels, all, chess_poss, from_move_only);
+            return;
+          } else {
+            // BLACK IN MATE
+            fprintf(stderr, "BLACK IN MATE\n");
+            write_to_file(1, fp, labels, all, chess_poss, from_move_only);
+            return;
+          }
+          return;
+        } else {
+          // NORMAL MOVE
+          int num = (rand() % (possible_moves_i - 1)) + 1;
+          unsigned int *to = possible_moves[num].move.to;
+          unsigned int *from = possible_moves[num].move.from;
+          uint64_t cur = (ONE << from[1]);
+          TYPE type;
+          if (args->piece_boards[BLACK][BISHOP][from[0]] & cur) {
+            type = BISHOP;
+          } else if (args->piece_boards[BLACK][ROOK][from[0]] & cur) {
+            type = ROOK;
+          } else if (args->piece_boards[BLACK][QUEEN][from[0]] & cur) {
+            type = QUEEN;
+          } else if (args->piece_boards[BLACK][PAWN][from[0]] & cur) {
+            type = PAWN;
+          } else if (args->piece_boards[BLACK][KNIGHT][from[0]] & cur) {
+            type = KNIGHT;
+          } else {
+            type = KING;
+          }
+          make_move(args, BLACK, type, from, to);
+          reset_possible_moves();
+          turn = 0;
+        }
+      }
+    } else {
+      // PLAY CALCULATED MOVES
+      return;
+    }
+  }
 }

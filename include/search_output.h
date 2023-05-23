@@ -24,6 +24,7 @@
                      FILE *all, FILE *chess_poss, FILE *from_move_only);
   void print_game(BOARD_ARGS *args);
   unsigned int random_val_gen();
+  void five_move_random(BOARD_ARGS *args, SIDE to_move);
 
   #ifndef log2_h
     unsigned int log2_lookup(uint64_t);
@@ -32,6 +33,8 @@
     int ms_bit_lookup(uint64_t *input);
     void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                    unsigned int *from, unsigned int *to);
+    MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth int alpha,
+                int beta, unsigned int turn);
   #endif
   #ifndef legal_h
     void get_legal(SIDE player, unsigned int *pos, TYPE type,

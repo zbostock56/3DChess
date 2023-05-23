@@ -68,7 +68,7 @@ int game_board[3][64] = {
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 25,26,27,28,29,30,31,32,
-21,23,19,17,18,20,24,22  // BLACK
+21,23,20,17,18,19,24,22  // BLACK
 },
 {
 0,0,0,0,0,0,0,0,
@@ -899,7 +899,7 @@ void play() {
       to_move = 1;
     } else {
       //MOVE com_move = level_zero_search(&game, turn, BLACK, 4, INT_MIN, INT_MAX);
-      MOVE com_move = search(&game, BLACK, 4, INT_MIN, INT_MAX, turn);
+      MOVE com_move = search(&game, BLACK, 3, INT_MIN, INT_MAX, turn);
       unsigned int *to = com_move.to;
       unsigned int *from = com_move.from;
       printf("BLACK'S MOVE\nfrom[0] %u\nfrom[1]"
