@@ -61,7 +61,11 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   int thread_num = -1;
   get_legal(enemy, args->k_pos[enemy], KING, *args, junk, &enemy_flags);
   get_legal(to_move, args->k_pos[to_move], KING, *args, junk, &player_flags);
-  if ((player_flags & MATE) || (enemy_flags & MATE)) {
+  if (player_flags & MATE) {
+    current.score = -1;
+    return current;
+  } else if (enemy_flags & MATE) {
+    current.score = -2;
     return current;
   } else {
     for (int i = 0; i < PIECE_TYPES; i++) {
@@ -272,12 +276,12 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
               make_temp_copy(args, &copy);
               make_move(&copy, to_move, i, ms_bit, ms_bit_poss_legal);
               pthread_mutex_lock(&lock);
-              stuff++;
+              //stuff++;
               pthread_mutex_unlock(&lock);
               current = search(&copy, enemy, depth - 1, alpha, beta, turn + 1);
               if ((to_move == WHITE && current.score >= best.score) ||
                 (to_move == BLACK && current.score <= best.score )) {
-                } if ((enemy_flags & MATE)) {
+                if ((enemy_flags & MATE)) {
                   best.score = current.score;
                   best.from[0] = current_position[0];
                   best.from[1] = current_position[1];
@@ -299,6 +303,7 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
                   best.to[1] = to_position[1];
                   best.rating = current.rating * 10;
                 }
+              }
                 // ALPHA-BETA PRUNING
                 /*
                   IF MAXIMIZING PLAYER (WHITE):

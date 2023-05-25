@@ -40,6 +40,7 @@
   void set_game_to_graphics(unsigned int *from, unsigned int *to);
   void play();
   void output_to_file(BOARD_ARGS *args, SIDE to_move);
+  void five_move_random(BOARD_ARGS *args, SIDE to_move);
 
   #ifndef search_h
     MOVE search(BOARD_ARGS *args, SIDE to_move, unsigned int depth, int alpha,

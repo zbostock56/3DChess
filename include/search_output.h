@@ -17,7 +17,7 @@
 
   // SEARCH_OUTPUT.H FILES
   void search_output(BOARD_ARGS *args, SIDE to_move);
-  void translate_position(BOARD_ARGS *args, int arr_pos);
+  void translate_position(BOARD_ARGS *args, int arr_pos, int arr_number);
   void reset_possible_moves();
   void output_to_file(BOARD_ARGS *args, SIDE to_move);
   void write_to_file(int result, FILE *samples, FILE *labels,

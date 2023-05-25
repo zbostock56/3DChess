@@ -15,7 +15,8 @@ int moved = 0;
 
 int main() {
   init_pieceboard(game);
-  output_to_file(&game, WHITE);
+  //output_to_file(&game, WHITE);
+  five_move_random(&game, WHITE);
   return 0;
 }
 
