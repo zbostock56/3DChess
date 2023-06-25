@@ -57,3 +57,5 @@ print(pygame.version.ver)
 * [X] Graphics Support
 * [ ] Neural-netork-based opponent
 * [ ] Testing on Windows (x86-64)
+* [ ] Two-Player Mode
+* [ ] Move Choice by Mouse
