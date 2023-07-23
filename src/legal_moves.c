@@ -1,5 +1,31 @@
 #include <legal_moves.h>
-
+/*
+* Title: get_legal()
+* Params:
+* -> SIDE player
+*   -> Enum to represent which player is currently
+*      searching for
+* -> unsigned int *pos
+*   -> Couple of two values which represents what
+*      the position of the piece is which we are
+*      searching legal moves for
+* -> TYPE type
+*   -> Enum to represent which type the piece which
+*      legal moves are being generated for
+* -> BOARD_ARGS args
+*   -> struct of bitboards which represents the current
+*      state of the board
+* -> uint64_t *output
+*   -> tuple of bitboards which represents the legal moves
+*      for the inputted piece
+* -> uint32_t *flags
+*   -> encoded bitstring which represents what the state
+*      of the game is (check, double check, checkmate)
+* Description:
+* This function is the main function which computes the
+* legal moves for all the pieces. It is also responsible
+* for determining checks and checkmates.
+*/
 void get_legal(SIDE player, unsigned int *pos, TYPE type,
                BOARD_ARGS args, uint64_t *output, uint32_t *flags) {
   /*
@@ -49,13 +75,20 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
                     p_attack, kp_enemies,
                     jp_check, &double_check);
 
-  total_check[TOP] = d_check[TOP] | hv_check[TOP] | jp_check[TOP] | jn_check[TOP];
-  total_check[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE] | jp_check[MIDDLE] | jn_check[MIDDLE];
-  total_check[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] | jp_check[BOTTOM] | jn_check[BOTTOM];
+  total_check[TOP] = d_check[TOP] | hv_check[TOP] |
+                     jp_check[TOP] | jn_check[TOP];
+  total_check[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE]
+                        | jp_check[MIDDLE] | jn_check[MIDDLE];
+  total_check[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] |
+                        jp_check[BOTTOM] | jn_check[BOTTOM];
   in_check = total_check[TOP] | total_check[MIDDLE] | total_check[BOTTOM];
 
   // SET CHECK FLAGS
-  uint64_t warning_board[3] = { 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff };
+  uint64_t warning_board[3] = {
+    0xffffffffffffffff,
+    0xffffffffffffffff,
+    0xffffffffffffffff
+  };
   if (in_check) {
     *flags |= CHECK;
   }
@@ -107,8 +140,10 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
             (player == WHITE ? W_PAWN_ATTACK[c_pos] : B_PAWN_ATTACK[c_pos]),
             kp_enemies, jp_check, &temp);
           t_check[TOP] = d_check[TOP] | hv_check[TOP] | jp_check[TOP] | jn_check[TOP];
-          t_check[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE] | jp_check[MIDDLE] | jn_check[MIDDLE];
-          t_check[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] | jp_check[BOTTOM] | jn_check[BOTTOM];
+          t_check[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE] |
+                            jp_check[MIDDLE] | jn_check[MIDDLE];
+          t_check[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] |
+                            jp_check[BOTTOM] | jn_check[BOTTOM];
           if (t_check[TOP] | t_check[MIDDLE] | t_check[BOTTOM]) {
             // IF THIS DOESN'T RESOLVE THE CHECK, REMOVE IT FROM
             // THE CHANCES OF MOVING THERE
@@ -170,8 +205,10 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
                         jp_check, &double_check);
 
       pl_move_poss[TOP] = d_check[TOP] | hv_check[TOP] | jp_check[TOP] | jn_check[TOP];
-      pl_move_poss[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE] | jp_check[MIDDLE] | jn_check[MIDDLE];
-      pl_move_poss[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] | jp_check[BOTTOM] | jn_check[BOTTOM];
+      pl_move_poss[MIDDLE] = d_check[MIDDLE] | hv_check[MIDDLE]
+                             | jp_check[MIDDLE] | jn_check[MIDDLE];
+      pl_move_poss[BOTTOM] = d_check[BOTTOM] | hv_check[BOTTOM] |
+                             jp_check[BOTTOM] | jn_check[BOTTOM];
       //if (sa[BISHOP][pos[0]] & args.d_sliders[enemy_t][pos[0]] ||
       //    sa[ROOK][pos[0]] & args.hv_sliders[enemy_t][pos[0]]) {
       if (pl_move_poss[TOP] | pl_move_poss[MIDDLE] | pl_move_poss[BOTTOM]) {
@@ -484,6 +521,34 @@ void get_legal(SIDE player, unsigned int *pos, TYPE type,
   }
 }
 
+/*
+* Title: calc_sa()
+* Params:
+* -> TYPE type
+*   -> Enum to represent the piece type
+*      which has been inputted
+* -> SIDE enemy_t
+*   -> Enum to represent which side
+*      is apposing the current player
+* -> uint64_t (*boards)[3]
+*   -> array of tuples which are used
+*      to pinpoint the different board
+*      configurations of the different
+*      pieces
+* -> unsigned int *pos
+*   -> couple that denotes the location of
+*      the piece being analyzed
+* -> uint64_t *sa
+*   -> output tuple of boards
+* Description:
+* Calculates the "spacially-aware" board
+* which takes into consideration pieces
+* that are blocking others, friends versus
+* enemies, and other factors to return
+* a board that represents what the piece
+* can "see" in terms of the other pieces.
+*/
+
 void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
                           unsigned int *pos, uint64_t *sa) {
   uint64_t *pl;
@@ -588,6 +653,32 @@ void calc_sa(TYPE type, SIDE enemy_t, uint64_t (*boards)[3],
   sa[pos[0]] |= attacks;
 }
 
+/*
+* Title: slider_check_detect()
+* Params:
+* -> uint64_t *sk
+*   -> spacially-aware board for the king
+* -> uint64_t *sk_xray
+*   -> spacially-aware board that can see
+*      through other pieces
+* -> uint64_t *pl
+*   -> pseudo-legal move board for the
+*      piece
+* -> uint64_t *sliders
+*   -> array of bitboards that represents
+*      the sliding pieces
+* -> uint64_t *output
+*   -> tuple of bitboards that represents
+*      the safe spaces
+* -> unsigned int *double_check
+*   -> simple boolean that denotes
+*      if the king is in double check
+* Description:
+* This is a simple function that checks
+* if the king is in check, or double check,
+* by one of the sliding pieces
+*/
+
 void slider_check_detect(uint64_t *sk, uint64_t sk_xray, uint64_t *pl,
                          unsigned int *pos, uint64_t *sliders,
                          uint64_t *output, unsigned int *double_check) {
@@ -628,6 +719,32 @@ void slider_check_detect(uint64_t *sk, uint64_t sk_xray, uint64_t *pl,
     output[pos[0]] = sk_xray & (pl[5 * e_pos] | LEVELS[e_pos]) & between_mask;
   }
 }
+
+/*
+* Title: jump_check_detect()
+* Params:
+* -> unsigned int *pos
+*   -> couple which represents the
+*      position to which the piece
+*      being analyzed is located
+* -> uint64_t pl
+*   -> pseudo-legal move board for the
+*      piece
+* -> uint64_t *piece_board
+*   -> array of bitboards which
+*      represents the enemy jumping
+*      pieces
+* -> uint64_t *output
+*   -> tuple of bitboards which represents
+*      which squares are safe
+* -> unsigned int *double_check
+*   -> simple boolean that denotes
+*      if the king is in double check
+* Description:
+* This is a simple function that checks
+* if the king is in check, or double check,
+* by one of the jumping pieces
+*/
 
 void jump_check_detect(unsigned int *pos, uint64_t pl, uint64_t *piece_board,
                        uint64_t *output, unsigned int *double_check) {

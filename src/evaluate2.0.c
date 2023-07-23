@@ -1,5 +1,31 @@
 #include <evaluate.h>
 
+/*
+* Title: evalute()
+* Params:
+* -> BOARD_ARGS *args
+*   -> Array of board args which houses
+*      bitboards to represent the current
+*      board position
+* -> SIDE to_move
+*   -> Enum to represent which side's turn
+*      it is now
+* -> uint32_t p_flags
+*   -> bitstring representation of if the
+*      player is in check, double check,
+*      or checkmate
+* -> uint32_t e_flags
+*   -> Same as above, but for the enemy
+* -> unsigned int turn
+*   -> Represents what turn number the game
+*      is currently at
+* Description:
+* Determines which player currently has the advantage
+* in the current board position. Also, incorporates
+* the rating system for current position to evaluate
+* king safety, piece position, amongst other things
+*/
+
 MOVE evaluate(BOARD_ARGS *args, SIDE to_move,
               uint32_t p_flags, uint32_t e_flags, unsigned int turn) {
   MOVE move;
@@ -69,6 +95,17 @@ MOVE evaluate(BOARD_ARGS *args, SIDE to_move,
   return move;
 }
 
+/*
+* Title: get_piece_num()
+* Params:
+* -> uint64_t *board
+*   -> Set of three bitboards which are
+*      to be analyzed
+* Description:
+* Simple helper to find out how many pieces
+* are on the passed in board
+*/
+
 unsigned int get_piece_num(uint64_t *board) {
   unsigned int sum = 0;
   uint64_t ONE = 1;
@@ -81,6 +118,17 @@ unsigned int get_piece_num(uint64_t *board) {
   return sum;
 }
 
+/*
+* Title: get_piece_num_sboard()
+* Params:
+* -> uint64_t board
+*   -> Single bitboard which is to
+*      be analyzed
+* Description:
+* Simple helper to find out how many pieces
+* are on the passed in bitboard
+*/
+
 unsigned int get_piece_num_sboard(uint64_t board) {
   unsigned int sum = 0;
   uint64_t ONE = 1;
@@ -90,6 +138,27 @@ unsigned int get_piece_num_sboard(uint64_t board) {
   }
   return sum;
 }
+
+/*
+* Title: get_weighted_rating()
+* Params:
+* -> unsigned int turn
+*   -> represents what the current turn number the
+*      game is on
+* -> SIDE player
+*   -> Enum to represent who's turn is up next
+* -> BOARD_ARGS *args
+*   -> struct of bitboards which represents the current
+*      board position
+* Description:
+* Helper function to figure out the rating of the current
+* position, not taking into account, necessarily, how many
+* pieces are on the board. Primarly, it focuses on king
+* positioning and pawn positioning. The weighting seen at
+* the top of the function changes based on the current
+* move and is applied to pieces differently based on how
+* active they need to be later in the game
+*/
 
 unsigned int get_weighted_rating(unsigned int turn,
                                  SIDE player, BOARD_ARGS *args) {

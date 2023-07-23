@@ -190,12 +190,6 @@ int main() {
   versor white_rot = { 0.0, -0.7071, 0.0, 0.7071 };
   versor black_rot = { 0.0, 0.7071, 0.0, 0.7071 };
 
-  /*ENTITY *board_ent = init_entity(board);
-  vec3 board_pos = { -1.05, 0.0, -1.05 };
-  glm_vec3_copy(piece_scale, board_ent->scale);
-  glm_vec3_copy(board_pos, board_ent->translation);
-  glm_quat_copy(board_rot, board_ent->rotation);*/
-
   versor board_rot = { 0.0, 0.7071, 0.0, 0.7071 };
   ENTITY *boards[3] = {
     init_entity(board),
@@ -602,6 +596,22 @@ void mouse_input(GLFWwindow *window, double xpos, double ypos) {
 
 // Helper Functions
 
+/*
+* Title: printf_bitboards()
+* Params:
+* -> unsigned int *from
+*   -> couple of two unsigned ints which
+*      represents where the piece started
+*      before moving (LEVEL, BITPOSITION)
+* -> unsigned int *to
+*   -> same as above, but represents where
+*      the piece moved to (LEVEL, BITPOSITION)
+* Description:
+* Moves the pieces on the graphics game layout.
+* Also handles when pieces are captured with helper
+* function later on
+*/
+
 void set_game_to_graphics(unsigned int *from, unsigned int *to) {
   if (to_move == 0) {
     moved = 0;
@@ -624,6 +634,18 @@ void set_game_to_graphics(unsigned int *from, unsigned int *to) {
   change_ready = 1;
 }
 
+/*
+* Title: printf_bitboards()
+* Params:
+* -> uint64_t *b
+*   -> Array of bitboards (assumed to be
+*      three bitboards) which typically
+*      represents parts of a position
+* Description:
+* Outputs the array of passed in bitboards
+* in a readable format to the screen
+*/
+
 void printf_bitboards(uint64_t *b) {
   for (int i = 0; i < 3; i++) {
     printf("%s\n", i == 0 ? "TOP" : i == 1 ? "MIDDLE" : "BOTTOM");
@@ -631,17 +653,44 @@ void printf_bitboards(uint64_t *b) {
   }
 }
 
+/*
+* Title: print_bitboards()
+* Params:
+* -> uint64_t *b
+*   -> Array of bitboards (assumed to be
+*      three bitboards) which typically
+*      represents parts of a position
+* -> FILE *fp
+*   -> Points to file to output to
+* Description:
+* Outputs the array of bitboards passed
+* to the file pointer passed in as a
+* readable format
+*/
+
 void print_bitboards(uint64_t *b, FILE *fp) {
   for (int i = 0; i < 3; i++) {
     print_bitboard(b[i], fp);
   }
 }
 
+/*
+* Title: print_bitboard()
+* Params:
+* -> uint64_t b
+*   -> bitboard passed in to print
+* -> FILE *fp
+*   -> Points to file to output to
+* Description:
+* Outputs the passed bitboard to the file
+* passed
+*/
+
 void print_bitboard(uint64_t b, FILE *fp) {
   #ifdef __linux__
     fprintf(fp, "%ld:\n", b);
   #elif __APPLE__
-    fprintf(ld, "%lld:\n", b);
+    fprintf(fp, "%lld:\n", b);
   #endif
   for (int i = 63; i >= 0; i--) {
     if (b & (ONE << i)) {
@@ -655,6 +704,16 @@ void print_bitboard(uint64_t b, FILE *fp) {
   }
   fprintf(fp, "\n");
 }
+
+/*
+* Title: printf_bitboard()
+* Params:
+* -> uint64_t b
+*   -> bitboard passed in to print
+* Description:
+* Outputs the passed in bitboard in a readable
+* format
+*/
 
 void printf_bitboard(uint64_t b) {
   #ifdef __linux__
@@ -674,6 +733,16 @@ void printf_bitboard(uint64_t b) {
   }
   printf("\n");
 }
+
+/*
+* Title: print_boards()
+* Params:
+* -> BOARD_ARGS game
+*     -> Houses bitboards which describe the position
+*        which the piece sit in
+* Description:
+* Prints the current board position to the screen
+*/
 
 void print_boards(BOARD_ARGS game) {
    if (game.boards[BLACK][0]) {
@@ -707,6 +776,62 @@ void print_boards(BOARD_ARGS game) {
      printf("---------------------------------------\n");
    }
 }
+
+/*
+* Title: print_boards_file()
+* Params:
+* -> BOARD_ARGS game
+*     -> Houses bitboards which describe the position
+*        which the piece sit in
+* -> FILE *fp
+*   -> Points to the file to output to
+* Description:
+* Prints all the bitboards which represent the current
+* board position to a file.
+*/
+void print_boards_file(BOARD_ARGS game, FILE *fp) {
+   if (game.boards[BLACK][0]) {
+     fprintf(fp, "-------------BLACK TOP-----------------\n");
+     print_bitboard(game.boards[BLACK][0], fp);
+     fprintf(fp, "---------------------------------------\n");
+   }
+   if (game.boards[BLACK][1]) {
+     fprintf(fp, "-------------BLACK MIDDLE--------------\n");
+     print_bitboard(game.boards[BLACK][1], fp);
+     fprintf(fp, "---------------------------------------\n");
+   }
+   if (game.boards[BLACK][2]) {
+     fprintf(fp, "-------------BLACK BOTTOM--------------\n");
+     print_bitboard(game.boards[BLACK][2], fp);
+     fprintf(fp, "---------------------------------------\n");
+   }
+   if (game.boards[WHITE][0]) {
+     fprintf(fp, "-------------WHITE TOP-----------------\n");
+     print_bitboard(game.boards[WHITE][0], fp);
+     fprintf(fp, "---------------------------------------\n");
+   }
+   if (game.boards[WHITE][1]) {
+     fprintf(fp, "-------------WHITE MIDDLE--------------\n");
+     print_bitboard(game.boards[WHITE][1], fp);
+     fprintf(fp, "---------------------------------------\n");
+   }
+   if (game.boards[WHITE][2]) {
+     fprintf(fp, "-------------WHITE BOTTOM--------------\n");
+     print_bitboard(game.boards[WHITE][2], fp);
+     fprintf(fp, "---------------------------------------\n");
+   }
+}
+
+/*
+* Title: print_game()
+* Params:
+* -> BOARD_ARGS *args
+*     -> Houses bitboards which describe the position
+*        which the piece sit in
+* Description:
+* Prints the current board position to the screen
+* with verbose piece printout and square layout
+*/
 
 void print_game(BOARD_ARGS *args) {
   char output[3][8][8] =
@@ -792,6 +917,17 @@ void print_game(BOARD_ARGS *args) {
   fflush(stdout);
 }
 
+/*
+* Title: switch_letters()
+* Params:
+* -> char letter
+*   -> Denotes which letter to switch to
+*      its number equivalent
+* Description:
+* Simply a helper function for print_game()
+* to print out the square coordinate grid
+*/
+
 int switch_letters(char letter) {
   if (letter == 'A') {
     return 7;
@@ -811,6 +947,17 @@ int switch_letters(char letter) {
     return 0;
   }
 }
+
+/*
+* Title: play()
+* Params:
+* NONE
+* Description:
+* Facilitates the main game loop. Primary
+* location for calling the rest of the helper
+* functions and controlling the graphics of
+* the game
+*/
 
 void play() {
   while (1) {

@@ -17,6 +17,23 @@ int possible_moves_i = 0;
 int piece_positions[192];
 int chosen_moves_i = 0;
 
+/*
+* Title: search_output()
+* Params:
+* -> BOARD_ARGS *args
+*   -> Struct of bitboards that represents the
+*      current board position
+* -> SIDE to_move
+*   -> Enum that represents who's turn it is
+*      to move
+* Description:
+* Single depth search, minimax search function
+* which is used to generate move data for AI
+* opponent. Moves are chosen at random then stored
+* in an array of structs to be stored in file
+* later on
+*/
+
 void search_output(BOARD_ARGS *args, SIDE to_move) {
   SIDE enemy = to_move == WHITE ? BLACK : WHITE;
   uint32_t player_flags = 0;
@@ -110,6 +127,30 @@ void search_output(BOARD_ARGS *args, SIDE to_move) {
   6: KING
 */
 
+/*
+* Title: translate_position()
+* Params:
+* -> BOARD_ARGS *args
+*   -> Struct of bitboards that represents the
+*      current board position
+* -> int arr_pos
+*   -> specifies where in the array of data structs
+*      the translated position is to be stored
+* -> int arr_number
+*   -> Not currently used, but is implemented in
+*      case of a multi-array storage solution
+* Description:
+* Board positions are passed in, then translated to
+* number based equivalent. Used to make the board
+* reading easier later on when the board is being
+* evaluted in the pygame python data preprocessing
+* data collection step. An active memory leak is known,
+* though is ignored since it causes instability else
+* where in the program. It is remedied by the move cap
+* later on when the game is play, preventing large amounts
+* of memory being allocated
+*/
+
 void translate_position(BOARD_ARGS *args, int arr_pos, int arr_number) {
   /* MAKE SURE TO FREE */
   int *p = (int *) calloc(192, sizeof(int));
@@ -151,6 +192,15 @@ void translate_position(BOARD_ARGS *args, int arr_pos, int arr_number) {
   }
 }
 
+/*
+* Title: reset_possible_moves()
+* Params:
+* NONE
+* Description:
+* Simply resets the possible moves array
+* back to its starting set
+*/
+
 void reset_possible_moves() {
   for (int i = 0; i < possible_moves_i; i++) {
     //if (possible_moves[i].position != NULL)
@@ -163,6 +213,21 @@ void reset_possible_moves() {
   }
   possible_moves_i = 0;
 }
+
+/*
+* Title: output_to_file()
+* Params:
+* -> BOARD_ARGS *args
+*   -> struct of bitboards to represent the
+*      current board position
+* -> SIDE to_move
+*   -> Enum to represent which player
+*      has the current move
+* Description:
+* Main loop to run the game and generate the data
+* needed for AI training. Calls all of the other
+* functions to facilitate the gameplay
+*/
 
 void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   srand(random_val_gen());
@@ -272,6 +337,18 @@ void output_to_file(BOARD_ARGS *args, SIDE to_move) {
   }
 }
 
+/*
+* Title: print_game()
+* Params:
+* -> BOARD_ARGS *args
+*   -> struct of bitboards to represent the
+*      current board position
+* Description:
+* Helper function to output to the screen
+* the current board position in a human
+* readable format
+*/
+
 void print_game(BOARD_ARGS *args) {
   char output[3][8][8] =
   {{{'-','-','-','-','-','-','-','-'},
@@ -356,7 +433,23 @@ void print_game(BOARD_ARGS *args) {
   fflush(stdout);
 }
 
-void write_to_file(int result, FILE *samples, FILE *labels, FILE *all, FILE *poss_only, FILE *from_move_only) {
+/*
+* Title: write_to_file()
+* Params:
+* -> int result
+*   -> Denotes whether the game is a win or
+*      a loss
+* -> FILE POINTERS
+*   -> Write to specific files, name of file
+*      is what the contents are
+* Description:
+* Handles writing all the data generated from
+* the games to the files which are used later
+* to generate data for AI opponent
+*/
+
+void write_to_file(int result, FILE *samples, FILE *labels,
+                   FILE *all, FILE *poss_only, FILE *from_move_only) {
   if (result == 1) {
     // GAME WAS A WIN
     for (int i = 0; i < chosen_moves_i; i++) {
@@ -369,8 +462,10 @@ void write_to_file(int result, FILE *samples, FILE *labels, FILE *all, FILE *pos
           fprintf(poss_only, "%d", chosen_moves[i].position[j]);
       }
       fprintf(poss_only, "\n");
-      int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
-      int to = ((chosen_moves[i].level_to) * 63) + (chosen_moves[i].bitposition_to);
+      int from = ((chosen_moves[i].level_from) * 63)
+                 + (chosen_moves[i].bitposition_from);
+      int to = ((chosen_moves[i].level_to) * 63)
+               + (chosen_moves[i].bitposition_to);
       unsigned int piece_type = chosen_moves[i].piece_type;
       fprintf(samples, "%d,%u\n", from, piece_type);
       fprintf(labels, "%d\n", to);
@@ -389,8 +484,10 @@ void write_to_file(int result, FILE *samples, FILE *labels, FILE *all, FILE *pos
           fprintf(poss_only, "%d", chosen_moves[i].position[j]);
       }
       fprintf(poss_only, "\n");
-      int from = ((chosen_moves[i].level_from) * 63) + (chosen_moves[i].bitposition_from);
-      int to = ((chosen_moves[i].level_to) * 63) + (chosen_moves[i].bitposition_to);
+      int from = ((chosen_moves[i].level_from) * 63)
+                 + (chosen_moves[i].bitposition_from);
+      int to = ((chosen_moves[i].level_to) * 63)
+               + (chosen_moves[i].bitposition_to);
       unsigned int piece_type = chosen_moves[i].piece_type;
       fprintf(samples, "%d,%u\n", from, piece_type);
       fprintf(labels, "%d\n", to);
@@ -405,12 +502,41 @@ void write_to_file(int result, FILE *samples, FILE *labels, FILE *all, FILE *pos
   fclose(from_move_only);
 }
 
+/*
+* Title: random_val_gen()
+* Params:
+* NONE
+* Description:
+* Creates a pseudo-random value for RNG
+* in the random moves
+*/
+
 unsigned int random_val_gen() {
     struct timeval tv;
     gettimeofday(&tv,NULL);
     long long state = (((long long) tv.tv_sec) * 1000) + (tv.tv_usec / 1000);
     return (unsigned int) state;
 }
+
+/*
+* Title: five_move_random()
+* Params:
+* -> BOARD_ARGS *args
+*   -> struct of bitboards which represent
+*      the current board position
+* -> SIDE to_move
+*   -> Enum which represents which player
+*      is currently the one whose turn
+*      it is
+* Description:
+* Newer method for creating game data for
+* the AI model. First 5 moves are generally
+* calculated with the normal minimax algo,
+* then the rest of the moves are calculated
+* at random. The algo is primarily used to
+* generate data which is better than random,
+* but faster than all normally calculated
+*/
 
 void five_move_random(BOARD_ARGS *args, SIDE to_move) {
   srand(random_val_gen());
@@ -433,7 +559,7 @@ void five_move_random(BOARD_ARGS *args, SIDE to_move) {
       fclose(from_move_only);
       exit(0);
     }
-    if (turn_number <= 10) {
+    if (turn_number <= 5) {
       // PLAY RANDOM MOVES
         if (turn == 0) {
         // WHITE'S MOVE
@@ -564,7 +690,8 @@ void five_move_random(BOARD_ARGS *args, SIDE to_move) {
         chosen_moves[chosen_moves_i].move = com_move;
         chosen_moves[chosen_moves_i++].piece_type = type;
         for (int i = 1; i < chosen_moves_i - 3; i++) {
-          if (chosen_moves[i - 1].bitposition_from == chosen_moves[i + 2].bitposition_to) {
+          if (chosen_moves[i - 1].bitposition_from ==
+              chosen_moves[i + 2].bitposition_to) {
             fprintf(stderr, "REPEATED MOVES, EXITING...\n");
             fclose(fp);
             fclose(labels);

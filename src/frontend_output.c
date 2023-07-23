@@ -15,10 +15,22 @@ int moved = 0;
 
 int main() {
   init_pieceboard(game);
-  //output_to_file(&game, WHITE);
-  five_move_random(&game, WHITE);
+  output_to_file(&game, WHITE);
+  //five_move_random(&game, WHITE);
   return 0;
 }
+
+/*
+* Title: printf_bitboards()
+* Params:
+* -> uint64_t *b
+*   -> Array of three bitboards which are
+*      to be printed in a more human readable
+*      format
+* Description:
+* Prints out the passed in array of bitboards
+* in a more human readable format
+*/
 
 void printf_bitboards(uint64_t *b) {
   for (int i = 0; i < 3; i++) {
@@ -26,6 +38,18 @@ void printf_bitboards(uint64_t *b) {
     printf_bitboard(b[i]);
   }
 }
+
+/*
+* Title: printf_bitboard()
+* Params:
+* -> uint64_t b
+*   -> bitboard which is
+*      to be printed in a more human readable
+*      format
+* Description:
+* Prints out the passed bitboard
+* in a more human readable format
+*/
 
 void printf_bitboard(uint64_t b) {
   #ifdef __linux__

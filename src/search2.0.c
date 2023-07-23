@@ -19,6 +19,15 @@ pthread_mutex_t lock;
      up the tree to be used in choosing the best move
 */
 
+/*
+* Title: print_moves()
+* Params:
+* NONE
+* Description:
+* Helper function to print out the move information
+* in a more readable format
+*/
+
 void print_moves() {
   MOVE cur;
   MOVE parent_cur;
@@ -40,6 +49,36 @@ void print_moves() {
   }
 }
 
+/*
+* Title: level_zero_search()
+* Params:
+* -> BOARD_ARGS *args
+*   -> pointer to a stuct which holds bitboards
+*      which detail the current board position
+* -> unsigned int turn
+*   -> simple integer to note which move number
+*      the game is on
+* -> SIDE to_move
+*   -> Enum to note which player's turn it is
+*      to move
+* -> unsigned int depth
+*   -> non-negative number that represents how many
+*      levels are left to search in the minimax
+*      algorithm
+* -> int alpha
+*   -> Alpha-Beta pruning number for the maximizing
+*      player
+* -> int beta
+*   -> Alpha-Beta pruning number for the minimizing
+*      player
+* Description:
+* Start of the multi-core minimax algorithm. Currently
+* in a state of disarray since there is issues with
+* resolving the best move returned by all of the threads.
+* Might be expanded upon later. Spawns threads which use
+* other helper functions to reach the actual minimax
+* search function
+*/
 
 MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
                        unsigned int depth, int alpha,
@@ -188,6 +227,21 @@ MOVE level_zero_search(BOARD_ARGS *args, unsigned int turn, SIDE to_move,
   return b_ret;
 }
 
+/*
+* Title: s_th_wrapper()
+* Params:
+* -> void *arg
+*   -> pointer to a struct containing
+*      info that the thread uses to know
+*      more details about what move
+*      combination it is to execute on.
+*      Generally, just a medium of transferring
+*      data when the thread is spawned
+* Description:
+* Helper function to have the threads call the correct
+* arguments with the minimax function
+*/
+
 void s_th_wrapper(void *arg) {
   S_INFO *args = (S_INFO *) arg;
   printf("spawning thread with id: %d\n", args->id);
@@ -196,6 +250,38 @@ void s_th_wrapper(void *arg) {
   printf("hit with %d\n", args->id);
   pthread_exit(0);
 }
+
+/*
+* Title: search()
+* Params:
+* -> BOARD_ARGS *args
+*   -> pointer to a struct which contains
+*      bitboards which describe the current
+*      board position
+* -> SIDE to_move
+*   -> Enum which represents which one of
+*      the player's turns it is to move
+* -> unsigned int depth
+*   -> non-negative number to represent how
+*      many levels are left for the algorithm
+*      to search
+* -> int alpha
+*   -> Alpha-beta number for the maximizing
+*      player
+* -> int beta
+*   -> Alpha-beta number for the minimizing
+*      player
+* -> unsigned int turn
+*   -> Number to represent the turn number
+*      for the game
+* Description:
+* Main minimax search function to determine
+* the best move for the computer to play.
+* Searches all legal move paths recursively
+* then returns the best moves found from that
+* branch, eventually narrowing down to the best
+* move.
+*/
 
 unsigned long long stuff = 0;
 MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
@@ -364,6 +450,33 @@ MOVE search (BOARD_ARGS *args, SIDE to_move, unsigned int depth,
   return best;
 }
 
+/*
+* Title: make_move()
+* Params:
+* -> BOARD_ARGS *args
+*   -> pointer to a struct which contains
+*      bitboards which describe the current
+*      board position
+* -> SIDE to_move
+*   -> Enum which represents which one of
+*      the player's turns it is to move
+* -> TYPE p_type
+*   -> Enum to represent which piece type
+*      is being moved
+* -> unsigned int *from
+*   -> pair of values to represent the position
+*      to which the piece started from
+*      {LEVEL, BITPOSITION}
+* -> unsigned int *to
+*   -> pair of values to represent the position
+*      to which the piece ended at
+*      {LEVEL, BITPOSITION}
+* Description:
+* Helper function to move the pieces on the
+* bitboard and adjust the requisite information
+* accordingly based on the move
+*/
+
 void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
                      unsigned int *from, unsigned int *to) {
   /*
@@ -416,11 +529,41 @@ void make_move(BOARD_ARGS *args, SIDE to_move, TYPE p_type,
   }
 }
 
+/*
+* Title: ms_bit_lookup()
+* Params:
+* -> uint64_t *input
+*   -> pointer to a bitboard where
+*      the most significant bit position
+*      is looked up using bitwise operations
+* Description:
+* Simple helper function to determine what the
+* decimal place value was associated with the
+* most significant bit
+*/
+
 int ms_bit_lookup(uint64_t *input) {
   int ms_bit_poss = log2_lookup(*input);
   *input &= ~(ONE << ms_bit_poss);
   return ms_bit_poss;
 }
+
+/*
+* Title: make_temp_copy()
+* Params:
+* -> BOARD_ARGS *source
+*   -> pointer to a struct of bitboards
+*      which represents the board state
+*      before a move it to be made
+* -> BOARD_ARGS *dest
+*   -> pointer to a struct of bitboards
+*      which represents the board state
+*      after the move it made
+* Description:
+* helper function to assist in not clobbering
+* the data stored in the BOARD_ARGS struct between
+* calls to the next level of depth in search()
+*/
 
 void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
   for (int i = 0; i < 2; i++) {
@@ -436,22 +579,40 @@ void make_temp_copy(BOARD_ARGS *source, BOARD_ARGS *dest) {
       }
     }
   }
+
   for (int i = 0; i < 2; i++) {
     for (int j = 0; j < 3; j++) {
     dest->hv_sliders[i][j] = source->hv_sliders[i][j];
     }
   }
+
   for (int i = 0; i < 2; i++) {
     for (int j = 0; j < 3; j++) {
     dest->d_sliders[i][j] = source->d_sliders[i][j];
     }
   }
+
   for (int i = 0; i < 2; i++) {
     for (int j = 0; j < 2; j++) {
     dest->k_pos[i][j] = source->k_pos[i][j];
     }
   }
 }
+
+/*
+* Title: get_max_min()
+* Params:
+* -> int is_max
+*   -> Simple integer (1 or 0) to denote
+*      if the player is white or black
+* -> int one
+*   -> first number in the comparison
+* -> int two
+*   -> second number in the comparison
+* Description:
+* Simple helper to determine which number
+* is higher for Alpha-Beta pruning
+*/
 
 int get_max_min(int is_max, int one, int two) {
   if (!is_max) {
